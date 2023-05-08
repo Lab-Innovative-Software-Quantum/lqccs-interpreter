@@ -1,0 +1,4 @@
+(executable
+ (public_name lqccs_interpreter)
+ (name main)
+ (libraries lqccs_interpreter))
