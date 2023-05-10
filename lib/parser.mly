@@ -17,10 +17,12 @@
 %token <int>  INTEGER
 %token <bool> BOOLEAN
 %token <char> CHARACTER
+/*  */
 /* Operators */
-%token EQ
+%token EQ PAR PLUS
 /* Other symbols */
 %token SEMICOL
+/*%token LPAREN RPAREN*/
 /* Operators */
 /*%token ADD SUB MULT DIV MOD ASSIGN
 %token SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV
@@ -63,9 +65,30 @@ http://gallium.inria.fr/~fpottier/X/INF564/html/parser.mly.html */
 /* -------------------------- Grammar specification --------------------------- */
 program:
     tdlist = list(decl) EOF    { Ast.Prog(tdlist) }
-  (*| EOF                        { Ast.Prog([]) } *)
+  (*| EOF                             { Ast.Prog([]) } *)
 ;
 
 decl:
-    ID EQ SEMICOL { build_node $loc (Ast.Procdecl({ name = $1 })) }
+    ID EQ proc SEMICOL { build_node $loc (Ast.Procdecl({ name = $1; proc = $3 })) }
+;
+
+parlist:
+     { build_node $loc (Ast.Par($1)) }
+;
+
+proclist:
+    separated_nonempty_list(PLUS, seq) { build_node $loc (Ast.NonDeterm($1)) }
+    separated_nonempty_list(PAR, proc) { build_node $loc (Ast.Par($1)) }
+;
+
+proc:
+
+;
+
+nondetermlist:
+    separated_nonempty_list(PLUS, seq) { build_node $loc (Ast.NonDeterm($1)) }
+;
+
+seq:
+    ID { build_node $loc (Ast.Discard($1)) }
 ;

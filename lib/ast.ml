@@ -34,62 +34,32 @@ type 'a annotated_node = {
 type typ =
   | TypI (* Type int *)
   | TypB (* Type bool *)
-  | TypC (* Type char *)
-  | TypA of typ * int option (* Array type *)
-  | TypP of typ (* Pointer type  *)
-  | TypV (* Type void  *)
-  | TypNull (* Type of null  *)
 [@@deriving show]
 
-and expr = expr_node annotated_node
+type expr = expr_node annotated_node
 
-and expr_node =
-  | Access of access (* x  or  *p  or  a[e]  *)
-  | Assign of access * expr (* x=e  or  *p=e  or  a[e]=e   *)
-  | Addr of access (* &x   or  &*p   or  &a[e]  *)
-  | ILiteral of int (* Integer literal  *)
-  | CLiteral of char (* Char literal    *)
-  | BLiteral of bool (* Bool literal    *)
-  | Null
-  | UnaryOp of uop * expr (* Unary primitive operator  *)
-  | BinaryOp of binop * expr * expr (* Binary primitive operator  *)
-  | Call of identifier * expr list (* Function call f(...)    *)
+and expr_node = string
 [@@deriving show]
 
-and access = access_node annotated_node
+type seq = seq_node annotated_node
 
-and access_node =
-  | AccVar of identifier (* Variable access    x  *)
-  | AccDeref of expr (* Pointer dereferencing  *p *)
-  | AccIndex of access * expr (* Array indexing   a[e] *)
+and seq_node = 
+  | Discard of string
+  | NonDeterm of seq list
 [@@deriving show]
 
-and stmt = stmt_node annotated_node
+type proc = proc_node annotated_node
 
-and stmt_node =
-  | If of expr * stmt * stmt (* Conditional    *)
-  | While of expr * stmt (* While loop     *)
-  | Expr of expr (* Expression statement   e;  *)
-  | Return of expr option (* Return statement  *)
-  | Block of stmtordec list (* Block: grouping and scope *)
-[@@deriving show]
-
-and var_decl = {
-  typ : typ;
-  vname : string;
-  init : expr option;
-}
-[@@deriving show]
-
-and stmtordec = stmtordec_node annotated_node
-
-and stmtordec_node =
-  | Dec of var_decl (* Local variable declaration  *)
-  | Stmt of stmt (* A statement   *)
+and proc_node = 
+  | Seq of seq_node
+  | Par of proc list
+  (*| Restr of proc * string list
+  | IfThenElse of expr * proc * proc*)
 [@@deriving show]
 
 type proc_decl = {
   name : string;
+  proc : proc;
 }
 [@@deriving show]
 

@@ -48,8 +48,9 @@ rule next_token = parse
 	}
 	| "/*"		{ multilinecomment lexbuf }
 	| "//"		{ singlelinecomment lexbuf }
+	| "||"		{ PAR }
+	| "+"		{ PLUS }
 	(*
-	| '+'		{ ADD }
 	| '-'		{ SUB }
 	| '*'		{ MULT }
 	| '/'       { DIV }
