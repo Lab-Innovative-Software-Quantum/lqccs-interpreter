@@ -1,26 +1,25 @@
-(lang dune 3.6)
+(lang dune 2.0)
 
-(name lqccs_interpreter)
+(name lqccs-lang)
 
 (generate_opam_files true)
 
-(source
- (github username/reponame))
+(authors "LIS")
 
-(authors "Author Name")
+(maintainers "LIS")
 
-(maintainers "Maintainer Name")
+(license ISC)
 
-(license LICENSE)
-
-(documentation https://url/to/documentation)
+(using menhir 2.0)
 
 (package
- (name lqccs_interpreter)
- (synopsis "A short synopsis")
- (description "A longer description")
- (depends ocaml dune)
- (tags
-  (topics "to describe" your project)))
+ (name lqccs-lang)
+ (synopsis "synopsis")
+ (description "lqccs interpreter")
+ (depends 
+  (ocaml (>= 4.12)) 
+   dune
+   menhir
+   ppx_deriving))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project
