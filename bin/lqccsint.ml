@@ -20,8 +20,8 @@ let load_file filename =
     syntax tree. *)
 let parse_file filename =
   let source = load_file filename in
-    let lexbuf = Lexing.from_string ~with_positions:true source in
-    Parsing.parse filename Scanner.next_token lexbuf
+  let lexbuf = Lexing.from_string ~with_positions:true source in
+  Parsing.parse filename Scanner.next_token lexbuf
 
 let action_function = function
   | Parse -> 

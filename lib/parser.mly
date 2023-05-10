@@ -64,31 +64,33 @@ http://gallium.inria.fr/~fpottier/X/INF564/html/parser.mly.html */
 
 /* -------------------------- Grammar specification --------------------------- */
 program:
-    tdlist = list(decl) EOF    { Ast.Prog(tdlist) }
-  (*| EOF                             { Ast.Prog([]) } *)
+    proc EOF    { Ast.Prog($1) }
 ;
 
-decl:
+(*decl:
     ID EQ proc SEMICOL { build_node $loc (Ast.Procdecl({ name = $1; proc = $3 })) }
-;
-
-parlist:
-     { build_node $loc (Ast.Par($1)) }
-;
-
-proclist:
-    separated_nonempty_list(PLUS, seq) { build_node $loc (Ast.NonDeterm($1)) }
-    separated_nonempty_list(PAR, proc) { build_node $loc (Ast.Par($1)) }
-;
+;*)
 
 proc:
-
+    (* just one process *)
+    simpleproc { $1 }
+    (* one or more parallel processes *)
+  | simpleproc PAR separated_nonempty_list(PAR, simpleproc) { build_node $loc (Ast.Par($1::$3)) }
 ;
 
-nondetermlist:
-    separated_nonempty_list(PLUS, seq) { build_node $loc (Ast.NonDeterm($1)) }
+simpleproc:
+    seq { build_node $loc (Ast.Seq($1)) }
+  (*| IF expr THEN proc ELSE proc
+  | proc SLASH ID this is restriction *)
 ;
 
 seq:
+    (* just one seq *)
+    simpleseq { $1 } 
+    (* one or more seq sperated by plus *)
+  | simpleseq PLUS separated_nonempty_list(PLUS, simpleseq) { build_node $loc (Ast.NonDeterm($1::$3)) }
+;
+
+simpleseq:
     ID { build_node $loc (Ast.Discard($1)) }
 ;

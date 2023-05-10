@@ -51,7 +51,7 @@ and seq_node =
 type proc = proc_node annotated_node
 
 and proc_node = 
-  | Seq of seq_node
+  | Seq of seq
   | Par of proc list
   (*| Restr of proc * string list
   | IfThenElse of expr * proc * proc*)
@@ -63,9 +63,9 @@ type proc_decl = {
 }
 [@@deriving show]
 
-type decl = decl_node annotated_node
+(*type decl = decl_node annotated_node
 
 and decl_node = Procdecl of proc_decl
-[@@deriving show]
+[@@deriving show]*)
 
-type program = Prog of decl list [@@deriving show]
+type program = Prog of proc [@@deriving show]
