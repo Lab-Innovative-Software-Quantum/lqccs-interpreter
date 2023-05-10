@@ -12,31 +12,14 @@
 		tbl
 	
 	let keywords_table =
-		create_hashtable 13 [
-			("int", 	INT);
-			("char", 	CHAR);
-			("bool", 	BOOL);
-			("void", 	VOID);
+	create_hashtable 0 []
+		(*create_hashtable 4 [
 			("if", 		IF);
 			("else", 	ELSE);
-			("for", 	FOR);
-			("while", 	WHILE);
-			("return", 	RETURN);
 			("true", 	BOOLEAN(true));
 			("false", 	BOOLEAN(false));
-			("do", 		DO);
-			("NULL", 	NULL)
-		]
+		]*)
 	
-	(* special characters are ', \b, \t, \, \r, and \n *)
-	let to_special_character c = match c with
-		  'b'	-> Some '\b'
-		| 't'	-> Some '\t'
-		| '\\'	-> Some '\\'
-		| 'r'	-> Some '\r'
-		| 'n'	-> Some '\n'
-		| '\'' 	-> Some '\''
-		| _ 	-> None
 }
 
 let newline = '\n' | '\r' '\n'
@@ -50,13 +33,13 @@ let identifier = (letter | '_') (letter | digit | '_')*
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	| integer as lit	
+	(*| integer as lit	
 	{ 
 		try (* int_of_string function recognizes hexadecimal notation too *)
 			INTEGER(int_of_string lit) 
 		with Failure _ -> 
 			raise_error lexbuf "Not a valid integer or exceeds the range of integers representable in type int"
-	}
+	}*)
 	| identifier as word 
 	{	(* identifier or keyword *)
 		match Hashtbl.find_opt keywords_table word with 
@@ -65,16 +48,7 @@ rule next_token = parse
 	}
 	| "/*"		{ multilinecomment lexbuf }
 	| "//"		{ singlelinecomment lexbuf }
-	| "'" 		{ readchar lexbuf }
-	| "true"	{ BOOLEAN(true) }
-	| "false"	{ BOOLEAN(false) }
-	| "++"		{ INCREMENT }
-	| "--"		{ DECREMENT }
-	| "+="		{ SHORTADD }
-	| "-="		{ SHORTSUB }
-	| "*="		{ SHORTMULT }
-	| "%="		{ SHORTMOD }
-	| "/="		{ SHORTDIV }
+	(*
 	| '+'		{ ADD }
 	| '-'		{ SUB }
 	| '*'		{ MULT }
@@ -82,9 +56,9 @@ rule next_token = parse
 	| '%'       { MOD }
 	| '='       { ASSIGN }
 	| '>'       { GT }
-	| '<'       { LT }
-	| "=="      { EQ }
-	| ">="      { GEQ }
+	| '<'       { LT }*)
+	| "="       { EQ }
+	(*| ">="      { GEQ }
 	| "<="      { LEQ }
 	| "!="      { NEQ }
 	| "&&"      { AND }
@@ -95,10 +69,8 @@ rule next_token = parse
 	| '['       { LBRACKET }
 	| ']'       { RBRACKET }
 	| '{'       { LBRACE }
-	| '}'       { RBRACE }
+	| '}'       { RBRACE }*)
 	| ';'       { SEMICOL }
-	| ','       { COMMA }
-	| '&'		{ AMPERSAND }
 	| eof		{ EOF }
 	| _			{ raise_error lexbuf  "Unexpected character" }
 
@@ -112,13 +84,3 @@ and singlelinecomment = parse
 	| newline		{ Lexing.new_line lexbuf; next_token lexbuf }
 	| _				{ singlelinecomment lexbuf }
 	| eof			{ EOF }
-
-and readchar = parse
-	  "'"					{ raise_error lexbuf "Missing character between single quotes" }
-	| '\\' (_ as c) '\''	{ 
-								match to_special_character(c) with
-									  Some ch 	-> CHARACTER(ch)
-									| None 		-> raise_error lexbuf "Invalid special character"
-							}
-	| [^ '\''] as c '\''	{ CHARACTER(c) }
-	| _						{ raise_error lexbuf "Character not terminated" }

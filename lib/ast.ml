@@ -88,17 +88,14 @@ and stmtordec_node =
   | Stmt of stmt (* A statement   *)
 [@@deriving show]
 
-type fun_decl = {
-  typ : typ;
-  fname : string;
-  formals : (typ * identifier) list;
-  body : stmt option;
+type proc_decl = {
+  name : string;
 }
 [@@deriving show]
 
-type topdecl = topdecl_node annotated_node
+type decl = decl_node annotated_node
 
-and topdecl_node = Fundecl of fun_decl | Vardec of var_decl
+and decl_node = Procdecl of proc_decl
 [@@deriving show]
 
-type program = Prog of topdecl list [@@deriving show]
+type program = Prog of decl list [@@deriving show]
