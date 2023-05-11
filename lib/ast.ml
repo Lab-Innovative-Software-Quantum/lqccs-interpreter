@@ -17,10 +17,6 @@ type binop =
 type uop = 
     Neg 
   | Not
-  | PreIncr
-  | PostIncr
-  | PreDecr
-  | PostDecr
 [@@deriving show]
 
 type identifier = string [@@deriving show]
@@ -38,7 +34,11 @@ type typ =
 
 type expr = expr_node annotated_node
 
-and expr_node = string
+and expr_node = 
+  | Access of identifier (* access variable *)
+  | BinaryOp of binop * expr * expr (* Binary primitive operator  *)
+  | ILiteral of int (* Integer literal  *)
+  | BLiteral of bool (* Bool literal    *)
 [@@deriving show]
 
 type seq = seq_node annotated_node
@@ -53,17 +53,17 @@ type proc = proc_node annotated_node
 and proc_node = 
   | Seq of seq
   | Par of proc list
-  (*| Restr of proc * string list
-  | IfThenElse of expr * proc * proc*)
+  | IfThenElse of expr * proc * proc
+  (*| Restr of proc * string list*)
 [@@deriving show]
 
-type proc_decl = {
+(*type proc_decl = {
   name : string;
   proc : proc;
 }
 [@@deriving show]
 
-(*type decl = decl_node annotated_node
+type decl = decl_node annotated_node
 
 and decl_node = Procdecl of proc_decl
 [@@deriving show]*)

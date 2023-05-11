@@ -19,18 +19,23 @@
 %token <char> CHARACTER
 /*  */
 /* Operators */
-%token EQ PAR PLUS
+%token PAR PLUS
+%token EQ GT LT GEQ LEQ NEQ
 /* Other symbols */
-%token SEMICOL
-/*%token LPAREN RPAREN*/
+%token LPAREN RPAREN
+%token COMMA
+/* Keywords */
+%token IF THEN ELSE
+
 /* Operators */
-/*%token ADD SUB MULT DIV MOD ASSIGN
+/*
+%token ADD SUB MULT DIV MOD ASSIGN
 %token SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV
 %token INCREMENT DECREMENT
 %token GT LT GEQ LEQ NEQ
 %token OR AND NOT*/
 /* Other symbols */
-/*%token LPAREN RPAREN
+/*
 %token LBRACE RBRACE
 %token LBRACKET RBRACKET
 %token SEMICOL COMMA
@@ -39,19 +44,11 @@
 /*%token INT CHAR VOID BOOL NULL
 %token IF RETURN THEN ELSE FOR WHILE DO*/
 
-
-/* ------ Precedence and associativity specification ------ */
-/* Fix for the dangling-else conflict. Idea from: 
-http://gallium.inria.fr/~fpottier/X/INF564/html/parser.mly.html */
-/*%nonassoc THEN
-%nonassoc ELSE
-
-%right ASSIGN SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV /* lowest precedence */
-/*%left OR 
-%left AND 
+/*%right ASSIGN SHORTADD SHORTSUB SHORTMULT SHORTMOD SHORTDIV /* lowest precedence */
 %left EQ NEQ
 %nonassoc GT LT GEQ LEQ
-%left ADD SUB 
+
+/*%left ADD SUB 
 %left MULT DIV MOD
 %nonassoc NOT AMPERSAND
 %nonassoc NEG
@@ -72,16 +69,21 @@ program:
 ;*)
 
 proc:
-    (* just one process *)
-    simpleproc { $1 }
-    (* one or more parallel processes *)
-  | simpleproc PAR separated_nonempty_list(PAR, simpleproc) { build_node $loc (Ast.Par($1::$3)) }
+    parlist { build_node $loc (Ast.Par($1)) }
+  | simpleproc  { $1 }
+;
+
+parlist:
+    simpleproc PAR simpleproc { [$1; $3] }
+  | simpleproc PAR parlist { $1::$3 }
+  | LPAREN simpleproc PAR simpleproc RPAREN PAR parlist { $2::$4::$7 }
 ;
 
 simpleproc:
-    seq { build_node $loc (Ast.Seq($1)) }
-  (*| IF expr THEN proc ELSE proc
-  | proc SLASH ID this is restriction *)
+    seq                         { build_node $loc (Ast.Seq($1)) }
+  | LPAREN simpleproc RPAREN    { $2 }
+  | IF expr THEN LPAREN proc RPAREN ELSE LPAREN proc RPAREN { build_node $loc (Ast.IfThenElse($2, $5, $9)) }
+  (*| proc SLASH ID this is restriction *)
 ;
 
 seq:
@@ -92,5 +94,35 @@ seq:
 ;
 
 simpleseq:
-    ID { build_node $loc (Ast.Discard($1)) }
+    ID  { build_node $loc (Ast.Discard($1)) }
+;
+
+expr:
+    lexpr   { build_node $loc $1 }
+  | rexpr   { build_node $loc $1 }
+;
+
+lexpr:
+    ID                    { Ast.Access($1) }
+  | LPAREN lexpr RPAREN   { $2 }
+;
+
+rexpr:
+    aexpr                   { $1 }
+  | expr binop expr         { Ast.BinaryOp($2, $1, $3) }
+;
+
+aexpr:
+    INTEGER               { Ast.ILiteral($1) }
+  | BOOLEAN               { Ast.BLiteral($1) }
+  | LPAREN rexpr RPAREN   { $2 }
+;
+
+%inline binop: // inline to fix shift/reduce conflicts
+  | EQ    { Ast.Equal }
+  | NEQ   { Ast.Neq }
+  | LT    { Ast.Less }
+  | GT    { Ast.Greater }
+  | LEQ   { Ast.Leq }
+  | GEQ   { Ast.Geq }
 ;

@@ -36,3 +36,9 @@ For example, if you want to give the flag `-p` you can do the following:
 ``` 
 _build/default/bin/lqccsint.exe -p test/samples/parser/fail-nondeterm1.lq
 ``` 
+
+### How to run the tests
+
+``` 
+./runtests.sh
+``` 

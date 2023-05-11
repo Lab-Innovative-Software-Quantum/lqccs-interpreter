@@ -12,13 +12,13 @@
 		tbl
 	
 	let keywords_table =
-	create_hashtable 0 []
-		(*create_hashtable 4 [
+		create_hashtable 3 [
 			("if", 		IF);
+			("then", 	THEN);
 			("else", 	ELSE);
-			("true", 	BOOLEAN(true));
-			("false", 	BOOLEAN(false));
-		]*)
+			(*("true", 	BOOLEAN(true));
+			("false", 	BOOLEAN(false));*)
+		]
 	
 }
 
@@ -33,13 +33,13 @@ let identifier = (letter | '_') (letter | digit | '_')*
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	(*| integer as lit	
+	| integer as lit	
 	{ 
 		try (* int_of_string function recognizes hexadecimal notation too *)
 			INTEGER(int_of_string lit) 
 		with Failure _ -> 
 			raise_error lexbuf "Not a valid integer or exceeds the range of integers representable in type int"
-	}*)
+	}
 	| identifier as word 
 	{	(* identifier or keyword *)
 		match Hashtbl.find_opt keywords_table word with 
@@ -50,28 +50,28 @@ rule next_token = parse
 	| "//"		{ singlelinecomment lexbuf }
 	| "||"		{ PAR }
 	| "+"		{ PLUS }
+	| '('       { LPAREN }
+	| ')'       { RPAREN }
+	| "="       { EQ }
+	| '>'       { GT }
+	| '<'       { LT }
+	| ">="      { GEQ }
+	| "<="      { LEQ }
+	| "!="      { NEQ }
 	(*
 	| '-'		{ SUB }
 	| '*'		{ MULT }
 	| '/'       { DIV }
-	| '%'       { MOD }
-	| '='       { ASSIGN }
-	| '>'       { GT }
-	| '<'       { LT }*)
-	| "="       { EQ }
-	(*| ">="      { GEQ }
-	| "<="      { LEQ }
-	| "!="      { NEQ }
+	| '%'       { MOD }*)
+	(*
 	| "&&"      { AND }
 	| "||"      { OR }
 	| "!"      	{ NOT }
-	| '('       { LPAREN }
-	| ')'       { RPAREN }
 	| '['       { LBRACKET }
 	| ']'       { RBRACKET }
 	| '{'       { LBRACE }
-	| '}'       { RBRACE }*)
-	| ';'       { SEMICOL }
+	| '}'       { RBRACE }
+	| ';'       { SEMICOL }*)
 	| eof		{ EOF }
 	| _			{ raise_error lexbuf  "Unexpected character" }
 
