@@ -14,12 +14,10 @@ type qop =
 [@@deriving show]
 
 
-(*type 'a annotated_node = {
+type 'a annotated_node = {
   loc : Location.code_pos; [@opaque]
   node : 'a;
 }
-[@@deriving show]*)
-type 'a annotated_node = 'a
 [@@deriving show]
 
 
