@@ -1,20 +1,30 @@
 type binop =
+  | Lt
+  | Gt
+  | Geq
   | Leq
+  | Eq
   | Or
+  | And
 [@@deriving show]
 
 
 type uop = 
   | Not
+  | Neg
 [@@deriving show]
 
 
 type qop = 
-  | HADAMARD (* todo *)
+  | H
+  | X
+  | Y
+  | Z
+  | CX
 [@@deriving show]
 
 
-(*type 'a annotated_node = {
+(* type 'a annotated_node = {
   loc : Location.code_pos; [@opaque]
   node : 'a;
 }
@@ -23,14 +33,22 @@ type 'a annotated_node = 'a
 [@@deriving show]
 
 
-type var = string [@@deriving show]
+type var = VarName of string [@@deriving show]
+
+type chan = Chan of string * ctype 
+and ctype = 
+  | TInt
+  | TBool
+  | TQuant
+[@@deriving show]
 
 
-type chan = string [@@deriving show]
 
-
-type qvar = int [@@deriving show]
-type qvarlist = QVarList of qvar list [@@deriving show]
+type qname = 
+  | QIndex of int
+  | Var of var
+[@@deriving show]
+type qnamelist = QNameList of qname list [@@deriving show]
 
 
 type expr = expr_node annotated_node
@@ -40,7 +58,7 @@ and expr_node =
   | ILiteral of int
   | BLiteral of bool
   | AccessVar of var
-  | AccessQVar of qvar
+  | AccessQNameList of qnamelist
 [@@deriving show]
 
 
@@ -50,25 +68,27 @@ and expr_node =
 *)
 type seq = seq_node annotated_node
 and seq_node = 
-  | Tau of par_prime
-  | Measure of qvarlist * var * par_prime
-  | Eps of qop * qvarlist * par_prime
-  | Recv of chan * var * par_prime
+  | Tau of par
+  | Measure of qnamelist * var * par
+  | QOp of qop * qnamelist * par
+  | Recv of chan * var * par
   | Send of chan * expr
-  | Discard of qvarlist
+  | Discard of qnamelist
 [@@deriving show]
 
 and choice = choice_node annotated_node
 and choice_node = Choice of seq list [@@deriving show]
 
-and par = par_node annotated_node
-and par_node = Par of choice list [@@deriving show]
+and par_top = par_top_node annotated_node
+and par_top_node = Par of choice list [@@deriving show]
 
-and par_prime = par_prime_node annotated_node
-and par_prime_node =
-  | IfThenElse of expr * par_prime * par_prime
-  | ParPrime of par
+and par = par_node annotated_node
+and par_node =
+  | IfThenElse of expr * par * par
+  | ParTopLevel of par_top
 [@@deriving show]
 
+type restr = restr_node annotated_node
+and restr_node = Restr of chan list [@@deriving show]
 
-type program = Prog of par * chan list [@@deriving show]
+type program = Prog of par_top * restr [@@deriving show]
