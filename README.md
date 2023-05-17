@@ -6,10 +6,10 @@ Interpreter for a linear quantum CCS.
 * [Grammar](#grammar)
 * [Usage](#usage)
 
-## Grammar
+# Grammar
 ![grammar](./.media/grammar.png)
 
-## Usage
+# Usage
 ``` 
   -p Parse and print AST
   -t Type checks and print the result
