@@ -1,6 +1,6 @@
 # LQCCS Interpreter
 
-Interpreter for a linear quantum CCS.
+Interpreter for linear quantum CCS.
 
 ### Table of contents
 * [Grammar](#grammar)
