@@ -2,6 +2,13 @@
 
 Interpreter for a linear quantum CCS.
 
+## Table of contents
+* [Grammar](#grammar)
+* [Usage](#usage)
+
+## Grammar
+![grammar](./.media/grammar.png)
+
 ## Usage
 ``` 
   -p Parse and print AST
