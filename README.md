@@ -7,7 +7,7 @@ Interpreter for linear quantum CCS.
 * [Usage](#usage)
 
 ## Grammar
-![grammar](./.media/grammar.png)
+![grammar](./grammar.png)
 
 ## Usage
 ``` 
