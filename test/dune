@@ -1,2 +1,7 @@
-(test
- (name lqccs_interpreter))
+(executable
+  (name test_typecheck)
+  (public_name test_typecheck)
+  (libraries lqccsint)
+  (modules test_typecheck)
+  (preprocess
+  (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
