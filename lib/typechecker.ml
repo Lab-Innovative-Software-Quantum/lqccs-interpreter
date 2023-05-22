@@ -93,7 +93,7 @@ and typecheck_internal_par env internal_par =
   | { node; _ } -> (
       match node with
       | InternalPar internal_choice_list ->
-          List.iter (typecheck_internal_choice env) internal_choice_list);
+          List.map (typecheck_internal_choice env) internal_choice_list) |> ignore;
           SigmaSet.empty (* todo *)
 
 and typecheck_seq env seq =
@@ -113,7 +113,7 @@ and typecheck_seq env seq =
         (* typecheck the rest of the program *)
         typecheck_internal_par env rest
     | QOp (qop, acclis, rest) -> 
-      let given_types = List.map(typecheck_access env) acclis in
+      let given_types = List.map(fun acc -> typecheck_access env acc |> fst) acclis in
       let required_types = (match qop with
         | H | X | Y | Z -> [TQuant]
         | CX -> [TBool; TQuant]) in
@@ -130,47 +130,27 @@ and typecheck_seq env seq =
       typecheck_internal_par env rest
     | Send (Chan(_, chantyp), exp) ->
       (* typecheck exp and check that its type is the channel's type *)
-      let exptyp = typecheck_expr env exp in
+      let exptyp, _ = typecheck_expr env exp in
       if chantyp <> exptyp
-      then raise(TypeException("Cannot send a " ^ show_typ exptyp ^ " through a " ^ show_typ chantyp ^ " channel", loc))
+      then raise(TypeException("Cannot send a " ^ show_typ exptyp ^ " through a " ^ show_typ chantyp ^ " channel", loc));
+      SigmaSet.empty (* TODO *)
     | Discard qnames ->
         List.iter (fun qname -> 
-          match typecheck_access env qname with
+          match typecheck_access env qname |> fst with
             | TQuant -> ()
             | anyTyp -> raise(TypeException("Cannot discard a " ^ show_typ anyTyp, loc))
-        ) qnames
+        ) qnames;
+        SigmaSet.empty (* TODO *)
 
 let typecheck_external_choice env external_choice =
   match external_choice with
   | { node = ExternalChoice(seq_list); _ } -> 
-      List.iter (typecheck_seq env) seq_list
+      List.map (typecheck_seq env) seq_list |> ignore (* TODO *)
 
 let typecheck_external_par env external_par =
   match external_par with
   | { node = ExternalPar external_choice_list; _ } ->
-      let all_sigma = List.map (typecheck_external_choice env) external_choice_list in
-      List.iter (fun sigma_i -> 
-        ()
-      ) all_sigma
-      (* 
-        1. For each external choice, retrieve the set of quantum variables: 
-        sigma_i is the set of quantum variable used in external choice i
-        2. Create an empty hashmap working_map
-        3. for each sigma_i:
-              for each element j inside sigma_i:
-                  add working_map[sigma_i[j]]
-                  if this fails, then fail the procedure
-       *)
-
-
-(* sia hash_set = {}
-sia sigma_i l'insieme di quantum variables del processo i
-per ogni elemento qp NELL'INSIEME sigma_i O(n)
-  metti qp nell'hash_set O(1) whp
-  Se c'era già allora fallisci!
-
-
-P1 || (if something then P3 else P4) *)
+      List.map (typecheck_external_choice env) external_choice_list |> ignore (* TODO *)
 
 
 let typecheck_program env prog =
