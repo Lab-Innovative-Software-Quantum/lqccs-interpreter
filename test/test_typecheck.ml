@@ -31,6 +31,33 @@ let tests = [
     )),
     node(Restr([]))
   ));
+  assertException(Prog(
+    node(ExternalPar(
+      [node(ExternalChoice(
+        [node(
+          Measure([
+            node(AccessQBit(1))
+          ],
+          VarName("x"),
+          node(
+            InternalPar([
+              node(
+                InternalChoice([
+                  node(Discard([
+                    node(AccessQBit(
+                      1
+                    ))
+                  ]))
+                ])
+              )
+            ])
+          )
+          ))
+        ])
+      )]
+    )),
+    node(Restr([]))
+  ));
 ]
 
 let _ = 
