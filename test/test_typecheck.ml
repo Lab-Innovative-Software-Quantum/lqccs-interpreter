@@ -21,13 +21,12 @@ let tests = [
   assertException(Prog(
     node(ExternalPar(
       [node(ExternalChoice(
-          [node(Discard([
+        [node(Discard([
             node(AccessVar(
               VarName "undeclared"
             ))
-          ])
-          )]
-        )
+          ]))
+        ])
       )]
     )),
     node(Restr([]))
