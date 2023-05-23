@@ -4,11 +4,11 @@ let simple_report header msg =
 
 let report_line header line (lexeme_pos: Location.lexeme_pos) msg =
   try
+    let arrows_quantity = 
+      if lexeme_pos.Location.end_column < lexeme_pos.Location.start_column then 1
+      else lexeme_pos.Location.end_column - lexeme_pos.Location.start_column + 1 in
     let prefix = String.make (lexeme_pos.Location.start_column - 1) ' ' in
-    let arrows = String.make
-      (lexeme_pos.Location.end_column - lexeme_pos.Location.start_column + 1)
-      '^'
-    in
+    let arrows = String.make arrows_quantity '^' in
     Printf.eprintf "\027[1;31m%s\027[0m, line %d: \027[1m%s\027[0m\n%s\n%s\027[1;31m%s\027[0m\n"
     header lexeme_pos.Location.line msg 
     line 
