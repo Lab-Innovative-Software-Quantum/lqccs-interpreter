@@ -13,10 +13,13 @@
 		tbl
 
 	let keywords_table =
-		create_hashtable 9 [
+		create_hashtable 12 [
 			("M",		MEASURE);
 			("Discard",	DISCARD);
-			("t",		TAU);
+			("Tau",		TAU);
+			("int", 	INT_TYP);
+			("bool",	BOOL_TYP);
+			("quant", 	QUANT_TYP);
 			("if", 		IF);
 			("then", 	THEN);
 			("else", 	ELSE);
@@ -53,6 +56,8 @@ rule next_token = parse
 		| Some token	-> token 
 		| None			-> ID(word)
 	}
+	| "\\"		{ BACKSLASH }
+	| ":"		{ COLON }
 	| "||"		{ PAR }
 	| "!"      	{ BANG }
 	| "?"      	{ QMARK }

@@ -20,6 +20,10 @@ deps: ## Install development dependencies
 build: ## Build the project, including non installable libraries and executables
 	opam exec -- dune build --root .
 
+.PHONY: reset-parser-messages
+reset-parser-messages:
+	cp _build/default/lib/parserMessages.auto.messages ./lib/parserMessages.messages
+
 .PHONY: start
 start: all ## Run the produced executable
 	opam exec -- dune exec --root . bin/$(EXE).exe $(ARGS)
