@@ -1,1 +1,1 @@
-(M(q1 > x).Discard(q1) || M(q1 > x).Discard(q1))
+M(q1 > x).Discard(q1) || M(q1 > x).Discard(q1)\()
