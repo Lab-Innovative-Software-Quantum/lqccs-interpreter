@@ -102,15 +102,14 @@ typ:
 | QUANT_TYP   { TQuant }
 
 %inline binop:
-    PLUS  { Ast.Sum }
-  | AND   { Ast.And }
-  | PAR    { Ast.Or }
-  | EQ    { Ast.Eq }
-  | LT    { Ast.Lt }
-  | GT    { Ast.Gt }
-  | LEQ   { Ast.Leq }
-  | GEQ   { Ast.Geq }
-;
+  PLUS  { Ast.Sum }
+| AND   { Ast.And }
+| PAR    { Ast.Or }
+| EQ    { Ast.Eq }
+| LT    { Ast.Lt }
+| GT    { Ast.Gt }
+| LEQ   { Ast.Leq }
+| GEQ   { Ast.Geq }
 
 %inline qop:
   QOP_H   { H }
