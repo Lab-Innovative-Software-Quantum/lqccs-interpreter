@@ -47,29 +47,43 @@ program:
   external_par BACKSLASH restr_list EOF { Prog($1, $3) }
 
 external_par:
-  LPAREN external_par RPAREN  { $2 }
-| separated_nonempty_list(PAR, external_choice) { build_node $loc (ExternalPar($1)) }
+  LPAREN external_par RPAREN  
+    { $2 }
+| separated_nonempty_list(PAR, external_choice) 
+    { build_node $loc (ExternalPar($1)) }
 
 external_choice:
   separated_nonempty_list(PLUS, seq) { build_node $loc (ExternalChoice($1)) }
 
 internal_choice:
-  LPAREN internal_choice RPAREN  { $2 }
-| seq { build_node $loc (InternalChoice([$1])) }
-| LPAREN seq PLUS separated_nonempty_list(PLUS, seq) RPAREN { build_node $loc (InternalChoice($2::$4)) }
-| IF expr THEN internal_par ELSE internal_par { build_node $loc (IfThenElse($2, $4, $6)) }
+  LPAREN internal_choice RPAREN  
+    { $2 }
+| seq 
+    { build_node $loc (InternalChoice([$1])) }
+| LPAREN seq PLUS separated_nonempty_list(PLUS, seq) RPAREN 
+    { build_node $loc (InternalChoice($2::$4)) }
+| IF expr THEN internal_par ELSE internal_par 
+    { build_node $loc (IfThenElse($2, $4, $6)) }
 
 internal_par:
-  internal_choice { build_node $loc (InternalPar([$1])) }
-| LPAREN internal_choice PAR separated_nonempty_list(PAR, internal_choice) RPAREN { build_node $loc (InternalPar($2::$4)) }
+  internal_choice 
+    { build_node $loc (InternalPar([$1])) }
+| LPAREN internal_choice PAR separated_nonempty_list(PAR, internal_choice) RPAREN 
+    { build_node $loc (InternalPar($2::$4)) }
 
 seq:
-  TAU DOT internal_par { build_node $loc (Tau($3)) }
-| MEASURE LPAREN nonempty_access_list GT ID RPAREN DOT internal_par { build_node $loc (Measure($3, VarName($5), $8)) }
-| qop LPAREN nonempty_access_list RPAREN DOT internal_par { build_node $loc (QOp($1, $3, $6)) }
-| chan QMARK ID DOT internal_par { build_node $loc (Recv($1, VarName($3), $5)) }
-| chan BANG expr { build_node $loc (Send($1, $3)) }
-| DISCARD LPAREN access_list RPAREN { build_node $loc (Discard($3)) }
+  TAU DOT internal_par 
+    { build_node $loc (Tau($3)) }
+| MEASURE LPAREN nonempty_access_list GT ID RPAREN DOT internal_par 
+    { build_node $loc (Measure($3, VarName($5), $8)) }
+| qop LPAREN nonempty_access_list RPAREN DOT internal_par 
+    { build_node $loc (QOp($1, $3, $6)) }
+| chan QMARK ID DOT internal_par 
+    { build_node $loc (Recv($1, VarName($3), $5)) }
+| chan BANG expr 
+    { build_node $loc (Send($1, $3)) }
+| DISCARD LPAREN access_list RPAREN 
+    { build_node $loc (Discard($3)) }
 
 access_list:
   separated_list(COMMA, access) { $1 }
@@ -104,7 +118,7 @@ typ:
 %inline binop:
   PLUS  { Ast.Sum }
 | AND   { Ast.And }
-| PAR    { Ast.Or }
+| PAR   { Ast.Or }
 | EQ    { Ast.Eq }
 | LT    { Ast.Lt }
 | GT    { Ast.Gt }
