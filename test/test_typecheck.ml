@@ -58,6 +58,21 @@ let tests = [
     )),
     node(Restr([]))
   ));
+  assertException(Prog(
+    node(ExternalPar(
+      [node(ExternalChoice(
+        [node(Discard([
+          node(AccessQBit(1))
+        ]))];
+      ));
+      node(ExternalChoice(
+        [node(Discard([
+          node(AccessQBit(1))
+        ]))];
+      ))]
+    )),
+    node(Restr([]))
+  ))
 ]
 
 let _ = 

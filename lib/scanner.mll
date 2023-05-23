@@ -13,12 +13,16 @@
 		tbl
 
 	let keywords_table =
-		create_hashtable 5 [
+		create_hashtable 9 [
+			("M",		MEASURE);
+			("Discard",	DISCARD);
+			("t",		TAU);
 			("if", 		IF);
 			("then", 	THEN);
 			("else", 	ELSE);
 			("true", 	BOOLEAN(true));
-			("false", BOOLEAN(false));
+			("false", 	BOOLEAN(false));
+			("H", 		QOP_H);
 		]
 
 }
@@ -29,11 +33,13 @@ let digit = ['0'-'9']
 let hexadecimal = (['a'-'f' 'A'-'F'] | digit) 
 let integer = digit+ | "0x" hexadecimal+
 let identifier = (letter | '_') (letter | digit | '_')*
+let qbit = ['1'-'9'] ['0'-'9']*
 
 (* Scanner specification *)
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
+	| ('q' | 'Q') 		{ read_qbit lexbuf } 		
 	| integer as lit	
 	{ 
 		try (* int_of_string function recognizes hexadecimal notation too *)
@@ -47,10 +53,11 @@ rule next_token = parse
 		| Some token	-> token 
 		| None			-> ID(word)
 	}
-	| "/*"		{ multilinecomment lexbuf }
-	| "//"		{ singlelinecomment lexbuf }
 	| "||"		{ PAR }
+	| "!"      	{ BANG }
+	| "?"      	{ QMARK }
 	| "+"		{ PLUS }
+	| "-"		{ MINUS }
 	| '('       { LPAREN }
 	| ')'       { RPAREN }
 	| "="       { EQ }
@@ -58,20 +65,10 @@ rule next_token = parse
 	| '<'       { LT }
 	| ">="      { GEQ }
 	| "<="      { LEQ }
-	| "!="      { NEQ }
-	(*
-	| '-'		{ SUB }
-	| '*'		{ MULT }
-	| '/'       { DIV }
-	| '%'       { MOD }*)
-	(*
 	| "&&"      { AND }
-	| "||"      { OR }
-	| "!"      	{ NOT }
-	| '['       { LBRACKET }
-	| ']'       { RBRACKET }
-	| '{'       { LBRACE }
-	| '}'       { RBRACE }
-	| ';'       { SEMICOL }*)
+	| "."      	{ DOT }
 	| eof		{ EOF }
 	| _			{ raise_error lexbuf  "Unexpected character" }
+and read_qbit = parse
+	  qbit as qb { Printf.printf "QUIIII %d\n" (int_of_string qb); Stdlib.flush(stdout); QBIT(int_of_string qb) }
+	| _		 { raise_error lexbuf "Invalid qbit definition" }

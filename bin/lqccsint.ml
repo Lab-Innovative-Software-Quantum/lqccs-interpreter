@@ -21,7 +21,7 @@ let load_file filename =
 let parse_file filename =
   let source = load_file filename in
   let lexbuf = Lexing.from_string ~with_positions:true source in
-  Parsing.parse filename Scanner.next_token lexbuf
+  Parsing.parse Scanner.next_token lexbuf
 
 let action_function = function
   | Parse -> 
@@ -57,9 +57,12 @@ let () =
     if !sourcefile = "" then (Arg.usage spec_list usage; exit 0 |> ignore)
     else
       try action_function !action !sourcefile with
-			| Lqccsint.Scanner.Lexing_error (pos, msg) | Lqccsint.Parsing.Syntax_error (pos, msg) ->
-        let source = try load_file pos.Location.filename with _ -> "" in
+			| Lqccsint.Parsing.Syntax_error (pos, msg) | Lqccsint.Scanner.Lexing_error (pos, msg) ->
+        let source = try load_file !sourcefile with _ -> "" in
         Lqccsint.Errors.report_singleline "Error" source pos msg
+      | Lqccsint.Typechecker.TypeException (msg, pos) ->
+        let source = try load_file !sourcefile with _ -> "" in
+        Lqccsint.Errors.report_multiline "Error" source pos msg
   with 
     Fatal_error msg
   | Failure msg -> Printf.eprintf "\027[1;31mFatal error:\027[0m %s\n" msg
