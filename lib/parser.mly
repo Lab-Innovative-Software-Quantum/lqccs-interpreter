@@ -14,7 +14,8 @@
 %token EQ GT LT GEQ LEQ
 %token AND
 %token QMARK BANG PAR
-%token QOP_H INT_TYP BOOL_TYP QUANT_TYP
+%token QOP_H QOP_X QOP_Y QOP_Z QOP_CX
+%token INT_TYP BOOL_TYP QUANT_TYP
 %token LPAREN RPAREN IF THEN ELSE DOT COMMA BACKSLASH COLON
 %token MEASURE DISCARD TAU
 
@@ -112,4 +113,8 @@ typ:
 ;
 
 %inline qop:
-  QOP_H { H }
+  QOP_H   { H }
+| QOP_X   { X }
+| QOP_Y   { Y }
+| QOP_Z   { Z }
+| QOP_CX  { CX }
