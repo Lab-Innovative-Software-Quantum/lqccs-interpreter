@@ -13,7 +13,7 @@
 		tbl
 
 	let keywords_table =
-		create_hashtable 16 [
+		create_hashtable 18 [
 			("M",		MEASURE);
 			("Discard",	DISCARD);
 			("Tau",		TAU);
@@ -25,6 +25,8 @@
 			("else", 	ELSE);
 			("true", 	BOOLEAN(true));
 			("false", 	BOOLEAN(false));
+			("or",		OR);
+			("and",		AND);
 			("H", 		QOP_H);
 			("X", 		QOP_X);
 			("Y", 		QOP_Y);
@@ -46,7 +48,7 @@ let qbit = ['1'-'9'] ['0'-'9']*
 rule next_token = parse
 	  [' ' '\t']+		{ next_token lexbuf }	(* ignore and skip whitespace *)
 	| newline			{ Lexing.new_line lexbuf; next_token lexbuf }
-	| ('q' | 'Q') 		{ read_qbit lexbuf } 		
+	| ('q' | 'Q') (qbit as qb)		{ QBIT(int_of_string qb) } 		
 	| integer as lit	
 	{ 
 		try (* int_of_string function recognizes hexadecimal notation too *)
@@ -56,13 +58,14 @@ rule next_token = parse
 	}
 	| identifier as word 
 	{	(* identifier or keyword *)
-		match Hashtbl.find_opt keywords_table word with 
+		match Hashtbl.find_opt keywords_table word with
 		| Some token	-> token 
-		| None			-> ID(word)
+		| None			->  ID(word)
 	}
 	| "\\"		{ BACKSLASH }
 	| ":"		{ COLON }
 	| "||"		{ PAR }
+	| "++" 		{ CHOICE }
 	| "!"      	{ BANG }
 	| "?"      	{ QMARK }
 	| "+"		{ PLUS }
@@ -74,10 +77,7 @@ rule next_token = parse
 	| '<'       { LT }
 	| ">="      { GEQ }
 	| "<="      { LEQ }
-	| "&&"      { AND }
 	| "."      	{ DOT }
+	| ","		{ COMMA }
 	| eof		{ EOF }
 	| _			{ raise_error lexbuf  "Unexpected character" }
-and read_qbit = parse
-	  qbit as qb { Printf.printf "QUIIII %d\n" (int_of_string qb); Stdlib.flush(stdout); QBIT(int_of_string qb) }
-	| _		 { raise_error lexbuf "Invalid qbit definition" }

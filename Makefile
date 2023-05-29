@@ -55,3 +55,7 @@ utop: ## Run a REPL and link with the project's libraries
 .PHONY: test_typecheck
 test_typecheck:  ## Run all the tests for the typechecker                                    
 	opam exec -- dune exec test/test_typecheck.exe
+
+.PHONY: test_parser
+test_parser:  ## Run all the tests for the typechecker                                    
+	opam exec -- dune exec test/test_parser.exe

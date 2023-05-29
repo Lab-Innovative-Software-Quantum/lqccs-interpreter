@@ -17,5 +17,4 @@ let parse scanner lexbuf =
   | Parser.Error state -> 
     let message = error_message state in
     let position = Location.to_lexeme_position lexbuf in
-    Location.show_lexeme_pos position |> Printf.printf "%s\n";
     raise(Syntax_error(position, message))

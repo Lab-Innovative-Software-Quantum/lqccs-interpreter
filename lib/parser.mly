@@ -12,12 +12,12 @@
 %token <int> QBIT
 %token PLUS MINUS
 %token EQ GT LT GEQ LEQ
-%token AND
+%token AND OR
 %token QMARK BANG PAR
 %token QOP_H QOP_X QOP_Y QOP_Z QOP_CX
 %token INT_TYP BOOL_TYP QUANT_TYP
 %token LPAREN RPAREN IF THEN ELSE DOT COMMA BACKSLASH COLON
-%token MEASURE DISCARD TAU
+%token MEASURE DISCARD TAU CHOICE
 
 /*%nonassoc THEN
 %nonassoc ELSE*/
@@ -25,8 +25,8 @@
 /* lowest precedence */
 %left AND
 %left EQ GT LT GEQ LEQ
-%left BANG PLUS MINUS
-%left PAR
+%left PLUS MINUS
+%left OR
 /*%nonassoc NOT
 %nonassoc NEG */
 /* highest precedence  */
@@ -53,14 +53,14 @@ external_par:
     { build_node $loc (ExternalPar($1)) }
 
 external_choice:
-  separated_nonempty_list(PLUS, seq) { build_node $loc (ExternalChoice($1)) }
+  separated_nonempty_list(CHOICE, seq) { build_node $loc (ExternalChoice($1)) }
 
 internal_choice:
   LPAREN internal_choice RPAREN  
     { $2 }
 | seq 
     { build_node $loc (InternalChoice([$1])) }
-| LPAREN seq PLUS separated_nonempty_list(PLUS, seq) RPAREN 
+| LPAREN seq CHOICE separated_nonempty_list(CHOICE, seq) RPAREN 
     { build_node $loc (InternalChoice($2::$4)) }
 | IF expr THEN internal_par ELSE internal_par 
     { build_node $loc (IfThenElse($2, $4, $6)) }
@@ -118,7 +118,7 @@ typ:
 %inline binop:
   PLUS  { Ast.Sum }
 | AND   { Ast.And }
-| PAR   { Ast.Or }
+| OR    { Ast.Or }
 | EQ    { Ast.Eq }
 | LT    { Ast.Lt }
 | GT    { Ast.Gt }

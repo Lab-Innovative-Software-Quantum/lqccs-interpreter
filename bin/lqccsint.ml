@@ -26,7 +26,7 @@ let parse_file filename =
 let action_function = function
   | Parse -> 
     (* Parse given source code and print the abstract syntax tree *)
-    parse_file >> Ast.show_program >> (Printf.printf "%s") 
+    parse_file >> Ast.show_program >> (Printf.printf "%s")
   | Type_check -> failwith "Type_check: to be done"
   | Interpret -> failwith "Interpret: to be done"
 
