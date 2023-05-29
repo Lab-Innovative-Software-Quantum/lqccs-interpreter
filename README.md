@@ -9,6 +9,11 @@ Interpreter for linear quantum CCS.
 ## Grammar
 ![grammar](./grammar.png)
 
+## Testing
+To test the parser you can see the tests in [test_parser.ml](./test/test_parser.ml) and run them with `make test_parser`.
+
+To test the typecheck you can see the tests in [test_typecheck.ml](./test/test_typecheck.ml) and run them with `make test_tyepcheck`.
+
 ## Usage
 ``` 
   -p Parse and print AST
