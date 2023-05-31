@@ -1,4 +1,4 @@
-open Lqccsint
+open Lqccs
 type action = Parse | Type_check | Interpret
 
 exception Fatal_error of string
@@ -27,8 +27,10 @@ let action_function = function
   | Parse -> 
     (* Parse given source code and print the abstract syntax tree *)
     parse_file >> Ast.show_program >> (Printf.printf "%s")
-  | Type_check -> failwith "Type_check: to be done"
-  | Interpret -> failwith "Interpret: to be done"
+  | Type_check -> 
+    parse_file >> Typechecker.typecheck >> ignore
+  | Interpret -> 
+    parse_file >> Eval.eval
 
 let () =
   try
@@ -57,12 +59,12 @@ let () =
     if !sourcefile = "" then (Arg.usage spec_list usage; exit 0 |> ignore)
     else
       try action_function !action !sourcefile with
-			| Lqccsint.Parsing.Syntax_error (pos, msg) | Lqccsint.Scanner.Lexing_error (pos, msg) ->
+			| Parsing.Syntax_error (pos, msg) | Scanner.Lexing_error (pos, msg) ->
         let source = try load_file !sourcefile with _ -> "" in
-        Lqccsint.Errors.report_singleline "Error" source pos msg
-      | Lqccsint.Typechecker.TypeException (msg, pos) ->
+        Errors.report_singleline "Error" source pos msg
+      | Typechecker.TypeException (msg, pos) | Eval.EvalException (pos, msg) ->
         let source = try load_file !sourcefile with _ -> "" in
-        Lqccsint.Errors.report_multiline "Error" source pos msg
+        Errors.report_multiline "Error" source pos msg
   with 
     Fatal_error msg
   | Failure msg -> Printf.eprintf "\027[1;31mFatal error:\027[0m %s\n" msg

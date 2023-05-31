@@ -1,4 +1,4 @@
 (executable
  (public_name lqccsint)
  (name lqccsint)
- (libraries lqccsint))
+ (libraries lqccs))
