@@ -26,11 +26,11 @@ let declare_chan env loc (Chan (cname, ctype)) =
 
 let declare_var env (VarName var) loc vartype =
   match Hashtbl.find_opt env var with
-    | Some v -> 
+  | Some v ->
       raise
         (TypeException
-          ("variable '" ^ var ^ "' already declared of type " ^ show_typ v, loc))
-    | None -> 
+           ("variable '" ^ var ^ "' already declared of type " ^ show_typ v, loc))
+  | None ->
       (* create variable with vtype in env *)
       Hashtbl.add env var vartype
 
@@ -135,12 +135,12 @@ and check_par_intersection loc =
     (fun acc set ->
       let inters = SigmaSet.inter set acc in
       (* intersection must be empty *)
-      if not(SigmaSet.is_empty inters) then
+      if not (SigmaSet.is_empty inters) then
         raise
           (TypeException
-              ("Parallel processes cannot share quantum variables", loc));
-      SigmaSet.union set acc
-    ) SigmaSet.empty
+             ("Parallel processes cannot share quantum variables", loc));
+      SigmaSet.union set acc)
+    SigmaSet.empty
 
 and typecheck_internal_choice env internal_choice =
   match internal_choice with
@@ -207,7 +207,8 @@ and typecheck_seq env seq =
                 | TQuant, None -> acclis
                 | anyTyp, _ ->
                     raise
-                      (TypeException ("Cannot measure a " ^ show_typ anyTyp, loc)))
+                      (TypeException
+                         ("Cannot measure a " ^ show_typ anyTyp, qname.loc)))
               [] qnames
           in
           (* declare variable var of the type int
@@ -232,7 +233,7 @@ and typecheck_seq env seq =
                       (TypeException
                          ( "Cannot apply quantum operation on a "
                            ^ show_typ anyTyp,
-                           loc )))
+                           qname.loc )))
               [] acclis
           in
           let given_types =
@@ -240,7 +241,7 @@ and typecheck_seq env seq =
           in
           let required_types =
             match qop with
-            | H | X | Y | Z -> [ TQuant ]
+            | H | X | I | Z -> [ TQuant ]
             | CX -> [ TQuant; TQuant ]
           in
           (* ensure the given types are the SAME of the required *)
@@ -251,16 +252,14 @@ and typecheck_seq env seq =
                     number of arguments",
                    loc ));
           (match tobe_checked with
-          | [AccessQBit(qb1); AccessQBit(qb2)] when qb1 = qb2 -> 
-            raise
-              (TypeException
-                 ("Quantum operation used with same qbits",
-                   loc ))
-          | [AccessVar(VarName(var1)); AccessVar(VarName(var2))] when var1 = var2 -> 
-            raise
-              (TypeException
-                 ("Quantum operation used with same quantum variables",
-                   loc ))
+          | [ AccessQBit qb1; AccessQBit qb2 ] when qb1 = qb2 ->
+              raise
+                (TypeException ("Quantum operation used with same qbits", loc))
+          | [ AccessVar (VarName var1); AccessVar (VarName var2) ]
+            when var1 = var2 ->
+              raise
+                (TypeException
+                   ("Quantum operation used with same quantum variables", loc))
           | _ -> ());
           (* typecheck the rest of the program *)
           let sigma_rest = typecheck_internal_par env rest in
@@ -316,15 +315,22 @@ let typecheck_external_par env external_par =
       let sigma_list =
         List.map (typecheck_external_choice env) external_choice_list
       in
-      check_par_intersection loc sigma_list |> ignore
+      check_par_intersection loc sigma_list
 
 let typecheck_program env prog =
   match prog with
   | Prog (external_par, restr) ->
-      typecheck_external_par env external_par;
-      typecheck_restr env restr
+      let global_sigmaset = typecheck_external_par env external_par in
+      typecheck_restr env restr;
+      prog, global_sigmaset
 
 let typecheck (ast : program) =
   let env = Hashtbl.create 256 in
-  typecheck_program env ast;
-  ast
+  let ast, sigmaset = typecheck_program env ast in
+  let qlist = SigmaSet.elements sigmaset in
+  let maxq = List.fold_left (fun curr_max elem ->
+    match elem with
+    | (AccessQBit(i), _) -> max i curr_max
+    | _ -> curr_max
+  ) 0 qlist in
+  ast, maxq

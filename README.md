@@ -2,13 +2,9 @@
 
 Interpreter for linear quantum CCS.
 
-# Contributors
+## Contributors
 
 Ferraro Domenico | ferraro.domenico125@gmail.com
-
-### Table of contents
-* [Grammar](#grammar)
-* [Usage](#usage)
 
 ## Grammar
 ![grammar](./grammar.png)
@@ -16,19 +12,30 @@ Ferraro Domenico | ferraro.domenico125@gmail.com
 ## Testing
 To test the parser you can see the tests in [test_parser.ml](./test/test_parser.ml) and run them with `make test_parser`.
 
-To test the typecheck you can see the tests in [test_typecheck.ml](./test/test_typecheck.ml) and run them with `make test_typecheck`.
+To test the typechecker you can see the tests in [test_typecheck.ml](./test/test_typecheck.ml) and run them with `make test_typecheck`.
+
+To test the quantum operations you can see the tests in [test_qop.ml](./test/test_qop.ml) and run them with `make test_qop`.
+
+To test the eval you can see the tests in [test_eval.ml](./test/test_eval.ml) and run them with `make test_eval`.
 
 ## Usage
-Run the REPL loop with `make start`. If you want to pass a file to the interpreter you can simply use `make start path/to/file`.
 
 ### Install dependencies
 
-``` 
+```
 make deps
 ```
 
 ### Build
 
-``` 
+```
 make build
 ```
+
+### Run
+
+```
+make start
+```
+
+With no arguments, the program executes the REPL loop. Otherwise, it is possible to run the interpreter on a single file using `make start path/to/file`.

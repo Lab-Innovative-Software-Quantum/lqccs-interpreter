@@ -1,10 +1,11 @@
+val qop_h : float list -> int -> float list
 
-val qop_h : 'a -> 'a
+val qop_x : float list -> int -> float list
 
-val qop_x : 'a -> 'a
+(*val qop_y : 'a -> int -> 'a
 
-val qop_y : 'a -> 'a
+val qop_z : 'a -> int -> 'a *)
 
-val qop_z : 'a -> 'a
+val qop_cx : float list -> int -> int -> float list
 
-val qop_cx : ('a -> 'b) -> 'a -> 'b
+val measure : float list -> int list -> (float list * int * float) list

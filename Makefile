@@ -1,4 +1,4 @@
-.DEFAULT_GOAL := all
+.DEFAULT_GOAL := build
 EXE=lqccsint
 BUILD_DIR=_build/default/
 TESTDIR=test/samples

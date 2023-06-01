@@ -30,7 +30,7 @@
 			("not",		NOT);
 			("H", 		QOP_H);
 			("X", 		QOP_X);
-			("Y", 		QOP_Y);
+			("I", 		QOP_I);
 			("Z", 		QOP_Z);
 			("CX", 		QOP_CX);
 		]

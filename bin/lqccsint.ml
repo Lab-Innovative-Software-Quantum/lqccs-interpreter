@@ -19,19 +19,29 @@ let parse source =
   let lexbuf = Lexing.from_string ~with_positions:true source in
   Parsing.parse Scanner.next_token lexbuf
 
+let print_distributions distributions =
+  Printf.printf "\nDistributions:\n";
+  List.iter
+    (fun distr -> Printf.printf "%s\n" (Eval.string_of_distribution distr))
+    distributions;
+  Printf.printf "\n"
+
 let eval source =
-  try 
-    parse source 
-    |> Typechecker.typecheck 
-    |> Eval.eval; 
-    print_endline "OK" (* TODO: print result list from eval *)
+  try
+    let ast = parse source in
+    let ast, qmax = Typechecker.typecheck ast in
+    Eval.eval ast qmax |> print_distributions
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
-      let header = Printf.sprintf "Parsing error:" in
+      let header = Printf.sprintf "Parsing error" in
       Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, pos) ->
-      let header = Printf.sprintf "Typechecking error:" in
+      let header = Printf.sprintf "Typechecking error" in
+      Errors.report_multiline header source pos msg;
+      Stdlib.flush_all ()
+  | Eval.EvalException (pos, msg) ->
+      let header = Printf.sprintf "Eval error" in
       Errors.report_multiline header source pos msg;
       Stdlib.flush_all ()
 
@@ -39,9 +49,8 @@ let rec repl source =
   Printf.printf "> ";
   Stdlib.flush_all ();
   source := read_line ();
-  if !source = "quit" then exit 0 else 
-    eval !source;
-    repl source
+  if !source = "quit" then exit 0 else eval !source;
+  repl source
 
 let () =
   try
@@ -62,14 +71,20 @@ let () =
       eval !source
     with
     | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
-        let header = Printf.sprintf "Parsing error:" in
+        let header = Printf.sprintf "Parsing error" in
         Errors.report_singleline header !source pos msg;
         Stdlib.flush_all ()
     | Typechecker.TypeException (msg, pos) ->
-        let header = Printf.sprintf "Typechecking error:" in
+        let header = Printf.sprintf "Typechecking error" in
+        Errors.report_multiline header !source pos msg;
+        Stdlib.flush_all ()
+    | Eval.EvalException (pos, msg) ->
+        let header = Printf.sprintf "Eval error" in
         Errors.report_multiline header !source pos msg;
         Stdlib.flush_all ()
   with
   | Fatal_error msg | Failure msg ->
       Printf.eprintf "\027[1;31mFatal error:\027[0m %s\n" msg
-  | _ -> Printf.eprintf "\027[1;31mUnexpected error\027[0m\n"
+  | exn ->
+      Printf.eprintf "\027[1;31mUnexpected error:\027[0m %s\n"
+        (Printexc.to_string exn)

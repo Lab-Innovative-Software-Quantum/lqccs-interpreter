@@ -14,7 +14,7 @@
 %token EQ GT LT GEQ LEQ NOT
 %token AND OR
 %token QMARK BANG PAR
-%token QOP_H QOP_X QOP_Y QOP_Z QOP_CX
+%token QOP_H QOP_X QOP_I QOP_Z QOP_CX
 %token INT_TYP BOOL_TYP QUANT_TYP
 %token LPAREN RPAREN IF THEN ELSE DOT COMMA BACKSLASH COLON
 %token MEASURE DISCARD TAU CHOICE
@@ -47,13 +47,12 @@ program:
   external_par BACKSLASH restr_list EOF { Prog($1, $3) }
 
 external_par:
-  LPAREN external_par RPAREN  
-    { $2 }
 | separated_nonempty_list(PAR, external_choice) 
     { build_node $loc (ExternalPar($1)) }
 
 external_choice:
-  separated_nonempty_list(CHOICE, seq) { build_node $loc (ExternalChoice($1)) }
+  LPAREN external_choice RPAREN { $2 }
+| separated_nonempty_list(CHOICE, seq) { build_node $loc (ExternalChoice($1)) }
 
 internal_choice:
   LPAREN internal_choice RPAREN  
@@ -129,6 +128,6 @@ typ:
 %inline qop:
   QOP_H   { H }
 | QOP_X   { X }
-| QOP_Y   { Y }
+| QOP_I   { I }
 | QOP_Z   { Z }
 | QOP_CX  { CX }

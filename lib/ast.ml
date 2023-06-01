@@ -25,7 +25,7 @@ type uop =
 type qop = 
   | H
   | X
-  | Y
+  | I
   | Z
   | CX
 [@@deriving show]

@@ -101,76 +101,9 @@ program: QOP_Z LPAREN ID RPAREN DOT THEN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: QOP_Y THEN
-##
-## Ends in an error in state: 11.
-##
-## seq -> QOP_Y . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## QOP_Y
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: QOP_Y LPAREN THEN
-##
-## Ends in an error in state: 12.
-##
-## seq -> QOP_Y LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## QOP_Y LPAREN
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: QOP_Y LPAREN ID GT
-##
-## Ends in an error in state: 13.
-##
-## seq -> QOP_Y LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## QOP_Y LPAREN nonempty_access_list
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
-## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: QOP_Y LPAREN ID RPAREN THEN
-##
-## Ends in an error in state: 14.
-##
-## seq -> QOP_Y LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## QOP_Y LPAREN nonempty_access_list RPAREN
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: QOP_Y LPAREN ID RPAREN DOT THEN
-##
-## Ends in an error in state: 15.
-##
-## seq -> QOP_Y LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## QOP_Y LPAREN nonempty_access_list RPAREN DOT
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
 program: QOP_X THEN
 ##
-## Ends in an error in state: 16.
+## Ends in an error in state: 11.
 ##
 ## seq -> QOP_X . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -182,7 +115,7 @@ program: QOP_X THEN
 
 program: QOP_X LPAREN THEN
 ##
-## Ends in an error in state: 17.
+## Ends in an error in state: 12.
 ##
 ## seq -> QOP_X LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -194,7 +127,7 @@ program: QOP_X LPAREN THEN
 
 program: QOP_X LPAREN ID GT
 ##
-## Ends in an error in state: 18.
+## Ends in an error in state: 13.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -213,7 +146,7 @@ program: QOP_X LPAREN ID GT
 
 program: QOP_X LPAREN ID RPAREN THEN
 ##
-## Ends in an error in state: 19.
+## Ends in an error in state: 14.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -225,12 +158,79 @@ program: QOP_X LPAREN ID RPAREN THEN
 
 program: QOP_X LPAREN ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 20.
+## Ends in an error in state: 15.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
 ## The known suffix of the stack is as follows:
 ## QOP_X LPAREN nonempty_access_list RPAREN DOT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_I THEN
+##
+## Ends in an error in state: 16.
+##
+## seq -> QOP_I . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_I
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_I LPAREN THEN
+##
+## Ends in an error in state: 17.
+##
+## seq -> QOP_I LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_I LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_I LPAREN ID GT
+##
+## Ends in an error in state: 18.
+##
+## seq -> QOP_I LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_I LPAREN nonempty_access_list
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_I LPAREN ID RPAREN THEN
+##
+## Ends in an error in state: 19.
+##
+## seq -> QOP_I LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_I LPAREN nonempty_access_list RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_I LPAREN ID RPAREN DOT THEN
+##
+## Ends in an error in state: 20.
+##
+## seq -> QOP_I LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_I LPAREN nonempty_access_list RPAREN DOT
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
@@ -1048,7 +1048,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN CHOICE THEN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: DISCARD LPAREN RPAREN PAR LPAREN THEN
+program: DISCARD LPAREN RPAREN CHOICE LPAREN THEN
 ##
 ## Ends in an error in state: 98.
 ##
@@ -1060,7 +1060,7 @@ program: DISCARD LPAREN RPAREN PAR LPAREN THEN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: DISCARD LPAREN RPAREN PAR LPAREN ID COLON BOOL_TYP THEN
+program: DISCARD LPAREN RPAREN CHOICE LPAREN ID COLON BOOL_TYP THEN
 ##
 ## Ends in an error in state: 99.
 ##
@@ -1202,7 +1202,7 @@ program: LPAREN THEN
 ## Ends in an error in state: 123.
 ##
 ## chan -> LPAREN . chan RPAREN [ RPAREN QMARK BANG ]
-## external_par -> LPAREN . external_par RPAREN [ RPAREN BACKSLASH ]
+## external_choice -> LPAREN . external_choice RPAREN [ RPAREN PAR BACKSLASH ]
 ##
 ## The known suffix of the stack is as follows:
 ## LPAREN
@@ -1210,63 +1210,28 @@ program: LPAREN THEN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: LPAREN DISCARD LPAREN RPAREN BACKSLASH
+program: LPAREN DISCARD LPAREN RPAREN PAR
 ##
-## Ends in an error in state: 126.
+## Ends in an error in state: 125.
 ##
-## external_par -> LPAREN external_par . RPAREN [ RPAREN BACKSLASH ]
+## external_choice -> LPAREN external_choice . RPAREN [ RPAREN PAR BACKSLASH ]
 ##
 ## The known suffix of the stack is as follows:
-## LPAREN external_par
+## LPAREN external_choice
 ##
 ## WARNING: This example involves spurious reductions.
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
 ## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
-## In state 125, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
-## In state 128, spurious reduction of production separated_nonempty_list(PAR,external_choice) -> external_choice
-## In state 124, spurious reduction of production external_par -> separated_nonempty_list(PAR,external_choice)
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: DISCARD LPAREN RPAREN PAR THEN
-##
-## Ends in an error in state: 129.
-##
-## separated_nonempty_list(PAR,external_choice) -> external_choice PAR . separated_nonempty_list(PAR,external_choice) [ RPAREN BACKSLASH ]
-##
-## The known suffix of the stack is as follows:
-## external_choice PAR
-##
-
-<YOUR SYNTAX ERROR MESSAGE HERE>
-
-program: DISCARD LPAREN RPAREN RPAREN
-##
-## Ends in an error in state: 132.
-##
-## program -> external_par . BACKSLASH restr_list EOF [ # ]
-##
-## The known suffix of the stack is as follows:
-## external_par
-##
-## WARNING: This example involves spurious reductions.
-## This implies that, although the LR(1) items shown above provide an
-## accurate view of the past (what has been recognized so far), they
-## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
-## In state 125, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
-## In state 128, spurious reduction of production separated_nonempty_list(PAR,external_choice) -> external_choice
-## In state 124, spurious reduction of production external_par -> separated_nonempty_list(PAR,external_choice)
+## In state 124, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: DISCARD LPAREN RPAREN BACKSLASH THEN
 ##
-## Ends in an error in state: 133.
+## Ends in an error in state: 130.
 ##
 ## program -> external_par BACKSLASH . restr_list EOF [ # ]
 ##
@@ -1278,7 +1243,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN THEN
 ##
-## Ends in an error in state: 134.
+## Ends in an error in state: 131.
 ##
 ## restr_list -> LPAREN . loption(separated_nonempty_list(COMMA,chan)) RPAREN [ EOF ]
 ##
@@ -1290,7 +1255,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP THEN
 ##
-## Ends in an error in state: 138.
+## Ends in an error in state: 135.
 ##
 ## separated_nonempty_list(COMMA,chan) -> chan . [ RPAREN ]
 ## separated_nonempty_list(COMMA,chan) -> chan . COMMA separated_nonempty_list(COMMA,chan) [ RPAREN ]
@@ -1303,7 +1268,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP COMMA THEN
 ##
-## Ends in an error in state: 139.
+## Ends in an error in state: 136.
 ##
 ## separated_nonempty_list(COMMA,chan) -> chan COMMA . separated_nonempty_list(COMMA,chan) [ RPAREN ]
 ##
@@ -1315,12 +1280,44 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP COMMA THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 141.
+## Ends in an error in state: 138.
 ##
 ## program -> external_par BACKSLASH restr_list . EOF [ # ]
 ##
 ## The known suffix of the stack is as follows:
 ## external_par BACKSLASH restr_list
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: DISCARD LPAREN RPAREN RPAREN
+##
+## Ends in an error in state: 140.
+##
+## separated_nonempty_list(PAR,external_choice) -> external_choice . [ BACKSLASH ]
+## separated_nonempty_list(PAR,external_choice) -> external_choice . PAR separated_nonempty_list(PAR,external_choice) [ BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## external_choice
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
+## In state 124, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: DISCARD LPAREN RPAREN PAR THEN
+##
+## Ends in an error in state: 141.
+##
+## separated_nonempty_list(PAR,external_choice) -> external_choice PAR . separated_nonempty_list(PAR,external_choice) [ BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## external_choice PAR
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
