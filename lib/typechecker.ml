@@ -25,16 +25,14 @@ let declare_chan env loc (Chan (cname, ctype)) =
     Hashtbl.add env cname ctype
 
 let declare_var env (VarName var) loc vartype =
-  try
-    let v = Hashtbl.find env var in
-    if v = vartype then () (* skip, if the variable was already defined *)
-    else
+  match Hashtbl.find_opt env var with
+    | Some v -> 
       raise
         (TypeException
-           ("variable '" ^ var ^ "' already declared of type " ^ show_typ v, loc))
-  with Not_found ->
-    (* create variable with vtype in env *)
-    Hashtbl.add env var vartype
+          ("variable '" ^ var ^ "' already declared of type " ^ show_typ v, loc))
+    | None -> 
+      (* create variable with vtype in env *)
+      Hashtbl.add env var vartype
 
 let typecheck_access env access =
   match access with
@@ -43,14 +41,14 @@ let typecheck_access env access =
       | AccessVar (VarName var) -> (
           (* check that var exists and return its type *)
           match Hashtbl.find_opt env var with
-            Some TQuant -> (TQuant, Some(AccessVar(VarName(var))))
+          | Some TQuant -> (TQuant, Some (AccessVar (VarName var)))
           | Some ctype -> (ctype, None)
           | None ->
               raise (TypeException ("Variable '" ^ var ^ "' not declared", loc))
           )
       | AccessQBit qb ->
           (* ensure the qbit is higher than 1 or equal *)
-          if qb > 0 then (TQuant, Some(AccessQBit(qb)))
+          if qb > 0 then (TQuant, Some (AccessQBit qb))
           else
             raise
               (TypeException ("QBit index must be higher or equal to 1", loc)))
@@ -136,16 +134,13 @@ and check_par_intersection loc =
   List.fold_left
     (fun acc set ->
       let inters = SigmaSet.inter set acc in
-      (* intersection must be empty or must contain quantum variables only *)
-      SigmaSet.iter (function
-        | AccessVar _, _ -> ()
-        | _ -> 
-          raise
-            (TypeException
-              ("Parallel processes cannot share quantum variables", loc))
-      ) inters;
+      (* intersection must be empty *)
+      if not(SigmaSet.is_empty inters) then
+        raise
+          (TypeException
+              ("Parallel processes cannot share quantum variables", loc));
       SigmaSet.union set acc
-  ) SigmaSet.empty
+    ) SigmaSet.empty
 
 and typecheck_internal_choice env internal_choice =
   match internal_choice with
@@ -174,20 +169,29 @@ and typecheck_internal_par env internal_par =
 
 and ensure_sent_or_discarded qlist sigma loc =
   (* fail if any qbit or quantum variable measured is never discarded or sent.
-    This check will also ensure that all the measured quantum variables and
-    qbits are in the sigma of the rest of the program *)
-  List.iter (fun el -> match el with
-    | AccessQBit(qb) -> 
-        (* fail if the qbit is not discarded or sent (i.e. the second element is true) *)
-        (match SigmaSet.find_opt (el, true) sigma with
-          | Some (_) -> ()
-          | _ -> raise (TypeException (Printf.sprintf "Qbit 'q%d' not discarded" qb, loc)))
-    | AccessVar(VarName(var)) ->
-      (* fail if the quantum variable is not discarded or sent (i.e. the second element is true) *)
-      (match SigmaSet.find_opt (el, true) sigma with
-          | Some (_) -> ()
-          | _ -> raise (TypeException (Printf.sprintf "Quantum variable '%s' not discarded" var, loc)))
-  ) qlist
+     This check will also ensure that all the measured quantum variables and
+     qbits are in the sigma of the rest of the program *)
+  List.iter
+    (fun el ->
+      match el with
+      | AccessQBit qb -> (
+          (* fail if the qbit is not discarded or sent (i.e. the second element is true) *)
+          match SigmaSet.find_opt (el, true) sigma with
+          | Some (_, true) -> ()
+          | Some (_, false) | _ ->
+              raise
+                (TypeException
+                   (Printf.sprintf "Qbit 'q%d' not discarded" qb, loc)))
+      | AccessVar (VarName var) -> (
+          (* fail if the quantum variable is not discarded or sent (i.e. the second element is true) *)
+          match SigmaSet.find_opt (el, true) sigma with
+          | Some (_, true) -> ()
+          | Some (_, false) | _ ->
+              raise
+                (TypeException
+                   ( Printf.sprintf "Quantum variable '%s' not discarded" var,
+                     loc ))))
+    qlist
 
 and typecheck_seq env seq =
   match seq with
@@ -195,15 +199,19 @@ and typecheck_seq env seq =
       match nod with
       | Tau rest -> typecheck_internal_par env rest
       | Measure (qnames, var, rest) ->
-          let tobe_checked = List.fold_left (fun acclis qname ->
-            match typecheck_access env qname with
-            | TQuant, Some acc -> acc::acclis
-            | TQuant, None -> acclis
-            | anyTyp, _ ->
-                raise (TypeException ("Cannot measure a " ^ show_typ anyTyp, loc)))
-          [] qnames in
+          let tobe_checked =
+            List.fold_left
+              (fun acclis qname ->
+                match typecheck_access env qname with
+                | TQuant, Some acc -> acc :: acclis
+                | TQuant, None -> acclis
+                | anyTyp, _ ->
+                    raise
+                      (TypeException ("Cannot measure a " ^ show_typ anyTyp, loc)))
+              [] qnames
+          in
           (* declare variable var of the type int
-          because the measurement returns an integer *)
+             because the measurement returns an integer *)
           declare_var env var loc TInt;
           (* typecheck the rest of the program *)
           let sigma_rest = typecheck_internal_par env rest in
@@ -213,13 +221,20 @@ and typecheck_seq env seq =
           (* return the sigma of the rest of the program, which contains all the quantum variables and qbits *)
           sigma_rest
       | QOp (qop, acclis, rest) ->
-          let tobe_checked = List.fold_left (fun accumlis qname ->
-            match typecheck_access env qname with
-            | TQuant, Some acc -> acc::accumlis
-            | TQuant, None -> accumlis
-            | anyTyp, _ ->
-                raise (TypeException ("Cannot apply quantum operation on a " ^ show_typ anyTyp, loc)))
-          [] acclis in
+          let tobe_checked =
+            List.fold_left
+              (fun accumlis qname ->
+                match typecheck_access env qname with
+                | TQuant, Some acc -> acc :: accumlis
+                | TQuant, None -> accumlis
+                | anyTyp, _ ->
+                    raise
+                      (TypeException
+                         ( "Cannot apply quantum operation on a "
+                           ^ show_typ anyTyp,
+                           loc )))
+              [] acclis
+          in
           let given_types =
             List.map (fun acc -> typecheck_access env acc |> fst) acclis
           in
@@ -235,6 +250,18 @@ and typecheck_seq env seq =
                  ( "Quantum operation used with invalid types or invalid \
                     number of arguments",
                    loc ));
+          (match tobe_checked with
+          | [AccessQBit(qb1); AccessQBit(qb2)] when qb1 = qb2 -> 
+            raise
+              (TypeException
+                 ("Quantum operation used with same qbits",
+                   loc ))
+          | [AccessVar(VarName(var1)); AccessVar(VarName(var2))] when var1 = var2 -> 
+            raise
+              (TypeException
+                 ("Quantum operation used with same quantum variables",
+                   loc ))
+          | _ -> ());
           (* typecheck the rest of the program *)
           let sigma_rest = typecheck_internal_par env rest in
           (* ensure every quantum variable or qbit on which the quantum
@@ -250,8 +277,8 @@ and typecheck_seq env seq =
           (* if receiving quantum variable of qbit, then ensure
              it is sent or discarded later in the program *)
           if chantyp = TQuant then
-            ensure_sent_or_discarded [AccessVar(var)] sigma_rest loc;
-          SigmaSet.remove (AccessVar(var), true) sigma_rest
+            ensure_sent_or_discarded [ AccessVar var ] sigma_rest loc;
+          SigmaSet.remove (AccessVar var, true) sigma_rest
       | Send (Chan (cname, chantyp), exp) -> (
           declare_chan env loc (Chan (cname, chantyp));
           (* typecheck exp and check that its type is the channel's type *)
@@ -263,7 +290,8 @@ and typecheck_seq env seq =
                    ^ show_typ chantyp ^ " channel",
                    loc ));
           match (exptyp, qb_opt) with
-          | TQuant, Some qbit_or_qvar -> SigmaSet.of_list [ (qbit_or_qvar, true) ]
+          | TQuant, Some qbit_or_qvar ->
+              SigmaSet.of_list [ (qbit_or_qvar, true) ]
           | _ -> SigmaSet.empty)
       | Discard qnames ->
           let discardedlist =
