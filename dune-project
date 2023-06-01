@@ -17,9 +17,10 @@
  (synopsis "synopsis")
  (description "lqccs interpreter")
  (depends 
-  (ocaml (>= 4.12)) 
+  ocaml
    dune
    menhir
-   ppx_deriving))
+   ppx_deriving
+   owl))
 
 ; See the complete stanza docs at https://dune.readthedocs.io/en/stable/dune-files.html#dune-project

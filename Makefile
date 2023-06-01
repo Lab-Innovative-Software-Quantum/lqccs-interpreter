@@ -3,6 +3,7 @@ EXE=lqccsint
 BUILD_DIR=_build/default/
 TESTDIR=test/samples
 TEST_SOURCES := $(wildcard $(TESTDIR)/*.mc)
+UNAME := $(shell uname -m)
 
 ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(ARGS):;@:)
@@ -11,6 +12,16 @@ $(eval $(ARGS):;@:)
 deps: ## Install development dependencies
 	opam install -y dune ocamlformat utop ocaml-lsp-server
 	opam install --deps-only --with-test --with-doc -y .
+ifeq ($(UNAME), arm64)
+	brew install openblas
+	export LDFLAGS="-L/opt/homebrew/opt/openblas/lib"
+	export CPPFLAGS="-I/opt/homebrew/opt/openblas/include"
+	export PKG_CONFIG_PATH="/opt/homebrew/opt/openblas/lib/pkgconfig"
+	opam pin -n "git+https://github.com/mseri/owl.git#arm64" --with-version=1.1.0
+	opam install owl.1.1.0
+else
+	opam install owl
+endif
 
 .PHONY: build
 build: ## Build the project, including non installable libraries and executables

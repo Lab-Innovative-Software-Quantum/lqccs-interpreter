@@ -29,7 +29,7 @@ let pretty_string_of_float number =
 let string_of_qstate qst =
   string_of_list (pretty_string_of_float) ~start_char:"[" ~end_char:"]" qst
 
-let string_of_conf (Conf(qst, prg, prob)) = 
+let string_of_conf (Conf(qst, prg, prob)) =
   Printf.sprintf "(%s, %s, %s)" (string_of_qstate qst)
         (string_of_program prg) (pretty_string_of_float prob)
 
@@ -124,7 +124,7 @@ let eval_seq seq (Process(Memory(symtbl, channels), Conf(qst, prg, prob))) =
             match op with
             | H -> qop_h qst firstqbit
             | X -> qop_x qst firstqbit
-            | I -> raise (EvalException (loc, "I not supported"))
+            | I -> qop_i qst firstqbit
             | Z -> raise (EvalException (loc, "Z not supported"))
             | CX ->
                 let secqbit = List.hd (List.tl q_indexes) in
@@ -192,10 +192,10 @@ let prog_of_par ext_choices restr loc =
 (* get the external par of the given process *)
 let extpar_of_proc (Process(Memory (_, _), (Conf(_, Prog (ext_par, _), _)))) = ext_par
 
-let choices_to_processes external_choice_list (Process(Memory (symtbl, channels), Conf(qst, Prog (extpar, restr), prob))) = 
-  (* build a list of external choice list. Example: transform 
-  [extchoice(A+B); extchoice(C); extchoice(D+E)] into 
-  [[extchoice(A); extchoice(B)]; [extchoice(C)]; [extchoice(D); extchoice(E)]] 
+let choices_to_processes external_choice_list (Process(Memory (symtbl, channels), Conf(qst, Prog (extpar, restr), prob))) =
+  (* build a list of external choice list. Example: transform
+  [extchoice(A+B); extchoice(C); extchoice(D+E)] into
+  [[extchoice(A); extchoice(B)]; [extchoice(C)]; [extchoice(D); extchoice(E)]]
   *)
   let choices_lis = List.fold_left (fun acc1 ext_choice ->
     match ext_choice.node with
@@ -211,7 +211,7 @@ let choices_to_processes external_choice_list (Process(Memory (symtbl, channels)
     [extchoice(A); extchoice(C); extchoice(E)];
     [extchoice(B); extchoice(C); extchoice(D)];
     [extchoice(B); extchoice(C); extchoice(E)];
-  ]    
+  ]
   *)
   let cp = cart_prod [] choices_lis in
   (* transform each inner list into a distribution. Return a list of distributions *)
@@ -220,12 +220,12 @@ let choices_to_processes external_choice_list (Process(Memory (symtbl, channels)
   ) cp
 
 let internal_par_to_external symtbl intpar =
-  let rec recurse acc intpar = 
+  let rec recurse acc intpar =
     match intpar.node with
     | InternalPar(intchoices) ->
       List.fold_left (fun acc2 intchoice ->
         match intchoice.node with
-        | IfThenElse(guard, then_branch, else_branch) -> 
+        | IfThenElse(guard, then_branch, else_branch) ->
           (match eval_expr symtbl guard with
           | Bool true -> recurse acc2 then_branch
           | Bool false -> recurse acc2 else_branch
@@ -237,11 +237,11 @@ let internal_par_to_external symtbl intpar =
   { node = extpar; loc = intpar.loc }
 
 let debug_distributions title distributions =
-  if not debug 
-    then () 
+  if not debug
+    then ()
   else (
     Printf.printf "\n[DEBUG] %s:\n" title;
-    List.iter (fun (RunDistr(proclist)) -> 
+    List.iter (fun (RunDistr(proclist)) ->
       let distr = Distribution(List.map (fun (Process(_, cnf)) -> cnf) proclist) in
       Printf.printf "%s\n" (string_of_distribution distr)
     ) distributions;
@@ -261,20 +261,20 @@ let eval_process proc =
     in
     let reslis = List.fold_left (fun acc (parallel_proc, proc_state) ->
       match proc_state with
-      | Ended -> 
-        if rest = [] then acc else 
+      | Ended ->
+        if rest = [] then acc else
         let new_ext_par = { node = ExternalPar(rest); loc = ext_par.loc } in
         let new_prog = Prog(new_ext_par, restr) in
         (Process(mem, Conf(qst, new_prog, prob)))::acc
-      | Waiting -> 
+      | Waiting ->
         let (Process(mem, Conf(qst, _, prob))) = parallel_proc in
         let new_ext_par = { node = ExternalPar(List.append rest [extchoice]); loc = ext_par.loc } in
         (Process(mem, Conf(qst, Prog (new_ext_par, restr), prob)))::acc
-      | CanAdvance(intpar) -> 
+      | CanAdvance(intpar) ->
         let (Process(Memory(symtbl, channels), Conf(new_qst, _, new_prob))) = parallel_proc in
         let new_ext_par = internal_par_to_external symtbl intpar in
         let new_ext_par = (match new_ext_par.node with
-        | ExternalPar(new_ext_choices) -> 
+        | ExternalPar(new_ext_choices) ->
           let newextpar = ExternalPar(List.append rest new_ext_choices) in
           { node = newextpar; loc = new_ext_par.loc })
         in
@@ -291,8 +291,8 @@ let rec pow a = function
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
 
-let rec eval_program distributions passes = 
-  let after_preprocessing = List.fold_left (fun acc (RunDistr(proclist)) -> 
+let rec eval_program distributions passes =
+  let after_preprocessing = List.fold_left (fun acc (RunDistr(proclist)) ->
     let processes = List.map (fun proc ->
       match extpar_of_proc proc with
       | { node = ExternalPar external_choice_list; _ } ->
@@ -308,16 +308,16 @@ let rec eval_program distributions passes =
   debug_distributions "APPLIED PREPROCESSING" after_preprocessing;
 
   let after_one_step = List.fold_left (fun accdistr (RunDistr(proclist)) ->
-    let new_proc_lis = List.fold_left (fun acc proc -> 
+    let new_proc_lis = List.fold_left (fun acc proc ->
       let new_processes = eval_process proc in
-      
-      if new_processes <> [] then 
+
+      if new_processes <> [] then
         List.append new_processes acc
-      else 
+      else
         acc
     ) [] proclist in
     let new_proc_lis = List.rev new_proc_lis in
-    if new_proc_lis = [] then accdistr 
+    if new_proc_lis = [] then accdistr
     else RunDistr(new_proc_lis)::accdistr
   ) [] after_preprocessing in
   let after_one_step = List.rev after_one_step in
@@ -333,7 +333,7 @@ let rec eval_program distributions passes =
   ) 1 after_one_step in
   if debug then Printf.printf "Max passes: %d\n" max_passes;
   if passes >= (max_passes * List.length after_one_step)
-  then after_one_step 
+  then after_one_step
   else eval_program after_one_step (passes + 1)
 
 let value_to_ast value loc =
@@ -343,21 +343,21 @@ let value_to_ast value loc =
   | QBit(qb) -> Access({ node = AccessQBit(qb); loc })
   ); loc }
 
-let enhance_conf symtbl (Conf(qst, Prog(ext_par, restr), prob)) = 
+let enhance_conf symtbl (Conf(qst, Prog(ext_par, restr), prob)) =
   let new_ext_par = (
     (match ext_par.node with
     | ExternalPar(extchoices) -> { node = ExternalPar(
-        List.map (fun choice -> 
+        List.map (fun choice ->
           match choice.node with
           | ExternalChoice(seqlis) -> { node = ExternalChoice(
-            List.map (fun seq -> 
+            List.map (fun seq ->
               { node = (match seq.node with
                 | Send(ch, expr) ->
                   let value = eval_expr symtbl expr in
                   Send(ch, value_to_ast value expr.loc)
                 | Discard(acclis) ->
-                  let acclis_val = List.map (fun acc -> 
-                    let value = eval_access symtbl acc in 
+                  let acclis_val = List.map (fun acc ->
+                    let value = eval_access symtbl acc in
                     match value with
                     | QBit(qb) -> { node = AccessQBit(qb); loc = acc.loc }
                     | _ -> acc
@@ -366,7 +366,7 @@ let enhance_conf symtbl (Conf(qst, Prog(ext_par, restr), prob)) =
                 | _ -> seq.node
                 ); loc = seq.loc }
             ) seqlis
-          ); loc = choice.loc }          
+          ); loc = choice.loc }
         ) extchoices
       ); loc = ext_par.loc }
     )
@@ -385,7 +385,7 @@ let eval (prog : program) (qmax : int) =
   let starting_distr = RunDistr([Process(Memory(symtbl, channels), Conf(qst, prog, 1.0))]) in
   (* evaluate the starting process with the starting configuration *)
   let ending_distr = eval_program [starting_distr] 0 in
-  List.map (fun (RunDistr(proclist)) -> 
+  List.map (fun (RunDistr(proclist)) ->
     Distribution(
       List.map (fun (Process(Memory(symtbl, _), cnf)) -> enhance_conf symtbl cnf) proclist
     )

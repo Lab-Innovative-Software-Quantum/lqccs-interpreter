@@ -5,12 +5,7 @@ description: "lqccs interpreter"
 maintainer: ["LIS"]
 authors: ["LIS"]
 license: "ISC"
-depends: [
-  "ocaml" {>= "4.12"}
-  "dune"
-  "menhir"
-  "ppx_deriving"
-]
+depends: ["ocaml" "dune" "menhir" "ppx_deriving" "owl"]
 build: [
   ["dune" "subst"] {pinned}
   [

@@ -1,6 +1,6 @@
 (library
  (name lqccs)
- (libraries menhirLib)
+ (libraries menhirLib owl)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
 
