@@ -59,3 +59,6 @@ test_typecheck:  ## Run all the tests for the typechecker
 .PHONY: test_parser
 test_parser:  ## Run all the tests for the typechecker                                    
 	opam exec -- dune exec test/test_parser.exe
+
+.PHONY: test
+test: test_parser test_typecheck ## Run all the tests

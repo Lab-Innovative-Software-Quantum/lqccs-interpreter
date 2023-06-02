@@ -127,6 +127,10 @@ let tests =
     assertException "CX(q1,q1).Discard(q1) \\ ()";
     (* 41- Check number of arguments of single qbit operations *)
     assertException "H(q1,q1).Discard(q1) \\ ()";
+    (* 42- Not of int *)
+    assertException "c1:int?x.c2:bool!not x \\ ()";
+    (* 42- Not of bool *)
+    assertNotException "c:bool?x.c:bool!not x \\ ()";
   ]
 
 let _ =

@@ -27,6 +27,7 @@
 			("false", 	BOOLEAN(false));
 			("or",		OR);
 			("and",		AND);
+			("not",		NOT);
 			("H", 		QOP_H);
 			("X", 		QOP_X);
 			("Y", 		QOP_Y);

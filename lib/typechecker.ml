@@ -90,11 +90,11 @@ let rec typecheck_expr env expr =
             match uop with
             | Not ->
                 if typ <> TBool then
-                  raise (TypeException ("Cannot negate" ^ show_typ typ, loc))
+                  raise (TypeException ("Cannot negate " ^ show_typ typ, loc))
                 else TBool
             | Neg ->
                 if typ <> TInt then
-                  raise (TypeException ("Cannot negate" ^ show_typ typ, loc))
+                  raise (TypeException ("Cannot negate " ^ show_typ typ, loc))
                 else TInt
           in
           (uoptyp, Option.None)
