@@ -4,8 +4,21 @@ open Typechecker
 
 exception EvalException of Location.code_pos * string
 
-(* qbits and the probability, which is expressed in the range [0, 1] 
-type 'a conf = Result of int list * 'a * float*)
+type ast_element =
+  | Seq of seq
+  | ExtChoice of external_choice
+  | IntChoice of internal_choice
+  | ExtPar of external_par
+  | IntPar of internal_par
+
+(* qbits and the probability, which is expressed in the range [0, 1] *)
+type qstate = float list
+type conf = Conf of qstate * ast_element * float
+
+(*
+[Conf([1/sqrt(2);0], a!1, 0.5); [1;1], b!1, Conf(0.5)]
+*)
+(* ((c1!1 || c1?x) ++ (c2!1 || c2?x)).print x *)
 
 type value = Int of int | Bool of bool | QBit of int
 
@@ -51,7 +64,7 @@ let rec eval_expr symtbl expr =
         eval_uop op v1 loc
       | ILiteral lit -> Int(lit)
       | BLiteral lit -> Bool(lit)
-      | Access acc -> eval_access symtbl acc |> ignore; Int(17))
+      | Access acc -> eval_access symtbl acc)
 
 let rec eval_choice symtbl seq_list _ = 
   List.map (fun choice ->
@@ -75,22 +88,24 @@ and eval_internal_par symtbl internal_par =
   | { node = InternalPar internal_choice_list; _ } ->
       List.map (eval_internal_choice symtbl) internal_choice_list |> ignore; []
 
-and eval_seq symtbl seq =
+and eval_seq symtbl seq (Conf(qst, _, prob)) =
   match seq with
-  | { node = nod; _ } -> (
+  | { node = nod; loc } -> (
       match nod with
-      | Tau rest -> eval_internal_par symtbl rest |> ignore; []
-      | Measure (_, _, rest) ->
-          (* eval the rest of the program *)
-          eval_internal_par symtbl rest |> ignore; []
+      | Tau rest -> Some(Conf(qst, IntPar(rest), prob))
+      | Measure (_, VarName(vname), rest) ->
+          (try 
+            let symtbl = add_entry (VarName(vname)) (QBit(0)) symtbl in
+            Some(Conf(qst, IntPar(rest), prob))
+          with Not_found -> raise(TypeException("Variable " ^ vname ^ " already declared", loc)))
       | QOp (_, _, rest) ->
-          (* eval the rest of the program *)
-          eval_internal_par symtbl rest |> ignore; []
+          Some(Conf(qst, IntPar(rest), prob))
       | Recv (Chan (_, _), _, rest) ->
-          (* eval the rest of the program *)
-          eval_internal_par symtbl rest |> ignore; []
-      | Send (Chan (_, _), _) -> [()]
-      | Discard _ -> [()])
+          Some(Conf(qst, IntPar(rest), prob))
+      | Send (Chan (_, _), _) -> 
+          None
+      | Discard _ -> 
+          None)
 
 let eval_external_choice symtbl external_choice =
   match external_choice with
@@ -106,9 +121,54 @@ let eval_program symtbl prog =
   match prog with
   | Prog (external_par, _) -> eval_external_par symtbl external_par
 
+(* type ast_generic = Seq of Ast.seq | Expr of Ast.expr | Boh of Ast. *)
+
+let rec schedule2 fn results lis = match lis with
+  | [] -> results (* nothing to be executed, return the whole list of result *)
+  | proc_lis -> 
+    (* for each process to be scheduled *)
+    let (res_lis, new_lis) = List.fold_left (fun (res_lis, new_lis) proc ->
+      let (res, ended) = fn proc in (* execute one step of the process <proc>. Obtain the result and if it has ended *)
+      (* if it has ended, return the result on top of the other results
+         and return the list without the current process *)
+      if ended then (res::res_lis, new_lis)
+      else (res_lis, proc::new_lis) 
+    ) ([], []) proc_lis in
+    schedule2 fn res_lis new_lis
+
+let rec schedule fn acc lis = match lis with
+  | [] -> acc
+  | x::xs -> 
+    let (res, ended) = fn x in
+    if ended then schedule fn (res::acc) xs 
+    else schedule fn acc lis 
+
+let rec eval_conf symtbl cnf = match cnf with
+  | (Conf(_, Seq(seq), _)) -> 
+      (match eval_seq symtbl seq cnf with
+        | Some new_conf -> eval_conf symtbl new_conf
+        | None -> [cnf])
+  | (Conf(qs, ExtChoice({ node = ExternalChoice(ext_choice_lis); _ }), prob)) -> 
+      List.map (fun choice ->
+        eval_conf symtbl (Conf(qs, Seq(choice), prob))
+      ) ext_choice_lis
+  | (Conf(_, IntChoice(internal_choice), _)) -> 
+      let new_conf = eval_internal_choice symtbl internal_choice in
+      eval_conf symtbl new_conf
+  | (Conf(_, ExtPar({ node = ExternalPar(ext_choice_lis); _ }), _)) -> 
+      let (tobe_exec, rest_of_lis) = get_next ext_choice_lis in
+      let new_conf = eval_conf symtbl tobe_exec in
+      eval_conf symtbl new_conf
+  | (Conf(_, IntPar(internal_par), _)) -> 
+      let new_conf = eval_internal_par symtbl internal_par in
+      eval_conf symtbl new_conf
+
 let eval (prog : program) =
   let symtbl = begin_block empty_table in
-  eval_program symtbl prog
+  let starting_conf = match prog with
+    | Prog (ext_par, _) -> 
+      (Conf([], ExtPar(ext_par), 1.0)) in
+  eval_conf symtbl starting_conf
 
 (*
    Configuration = [ quantum state, ast, probability ]
