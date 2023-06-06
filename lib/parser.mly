@@ -11,7 +11,7 @@
 %token <bool> BOOLEAN
 %token <int> QBIT
 %token PLUS MINUS
-%token EQ GT LT GEQ LEQ
+%token EQ GT LT GEQ LEQ NOT
 %token AND OR
 %token QMARK BANG PAR
 %token QOP_H QOP_X QOP_Y QOP_Z QOP_CX
@@ -25,10 +25,10 @@
 /* lowest precedence */
 %left AND
 %left EQ GT LT GEQ LEQ
-%left PLUS MINUS
+%left PLUS
 %left OR
-/*%nonassoc NOT
-%nonassoc NEG */
+%nonassoc NOT
+%nonassoc MINUS
 /* highest precedence  */
 
 %start program
@@ -99,6 +99,7 @@ expr:
   LPAREN expr RPAREN  { $2 }
 | expr binop expr     { build_node $loc (BinaryOp($2, $1, $3)) }
 | MINUS expr          { build_node $loc (UnaryOp(Neg, $2)) }
+| NOT expr            { build_node $loc (UnaryOp(Not, $2)) }
 | BOOLEAN             { build_node $loc (BLiteral($1)) }
 | INTEGER             { build_node $loc (ILiteral($1)) }
 | access              { build_node $loc (Access($1)) }

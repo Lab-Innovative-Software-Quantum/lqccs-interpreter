@@ -7,10 +7,6 @@ TEST_SOURCES := $(wildcard $(TESTDIR)/*.mc)
 ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(ARGS):;@:)
 
-.PHONY: all
-all: 
-	opam exec -- dune build --root .
-
 .PHONY: deps
 deps: ## Install development dependencies
 	opam install -y dune ocamlformat utop ocaml-lsp-server
@@ -25,7 +21,7 @@ reset-parser-messages:
 	cp _build/default/lib/parserMessages.auto.messages ./lib/parserMessages.messages
 
 .PHONY: start
-start: all ## Run the produced executable
+start: build ## Run the interpreter
 	opam exec -- dune exec --root . bin/$(EXE).exe $(ARGS)
 
 .PHONY: clean
@@ -59,3 +55,14 @@ test_typecheck:  ## Run all the tests for the typechecker
 .PHONY: test_parser
 test_parser:  ## Run all the tests for the typechecker                                    
 	opam exec -- dune exec test/test_parser.exe
+
+.PHONY: test_eval
+test_eval:  ## Run all the tests for the evaluation                                    
+	opam exec -- dune exec test/test_eval.exe
+
+.PHONY: test_qop
+test_qop:  ## Run all the tests for the quantum operations                                    
+	opam exec -- dune exec test/test_qop.exe
+
+.PHONY: test
+test: test_parser test_typecheck test_eval test_qop ## Run all the tests

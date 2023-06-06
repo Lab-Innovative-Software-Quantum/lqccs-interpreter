@@ -1,4 +1,4 @@
-open Lqccsint
+open Lqccs
 
 let assertException source ind =
   try
@@ -11,7 +11,7 @@ let assertException source ind =
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
       let header = Printf.sprintf "[FAIL] Test #%2d" ind in
-      Lqccsint.Errors.report_singleline header source pos msg;
+      Lqccs.Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, _) ->
       Printf.printf "[ OK ] Test #%2d: %s\n" ind msg
@@ -26,11 +26,11 @@ let assertNotException source ind =
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
       let header = Printf.sprintf "[FAIL] Test #%2d" ind in
-      Lqccsint.Errors.report_singleline header source pos msg;
+      Lqccs.Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, pos) ->
       let header = Printf.sprintf "[FAIL] Test #%2d" ind in
-      Lqccsint.Errors.report_multiline header source pos msg;
+      Lqccs.Errors.report_multiline header source pos msg;
       Stdlib.flush_all ()
 
 let tests =
@@ -127,6 +127,10 @@ let tests =
     assertException "CX(q1,q1).Discard(q1) \\ ()";
     (* 41- Check number of arguments of single qbit operations *)
     assertException "H(q1,q1).Discard(q1) \\ ()";
+    (* 42- Not of int *)
+    assertException "c1:int?x.c2:bool!not x \\ ()";
+    (* 43- Not of bool *)
+    assertNotException "c:bool?x.c:bool!not x \\ ()";
   ]
 
 let _ =

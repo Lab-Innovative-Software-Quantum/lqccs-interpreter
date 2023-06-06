@@ -1,13 +1,27 @@
 (test
   (name test_typecheck)
-  (libraries lqccsint)
+  (libraries lqccs)
   (modules test_typecheck)
   (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
 
 (test
   (name test_parser)
-  (libraries lqccsint)
+  (libraries lqccs)
   (modules test_parser)
+  (preprocess
+  (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
+
+(test
+  (name test_eval)
+  (libraries lqccs)
+  (modules test_eval)
+  (preprocess
+  (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
+
+(test
+  (name test_qop)
+  (libraries lqccs)
+  (modules test_qop)
   (preprocess
   (pps ppx_deriving.show ppx_deriving.ord ppx_deriving.eq)))
