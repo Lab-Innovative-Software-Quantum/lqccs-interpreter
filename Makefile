@@ -24,6 +24,10 @@ build: ## Build the project, including non installable libraries and executables
 reset-parser-messages:
 	cp _build/default/lib/parserMessages.auto.messages ./lib/parserMessages.messages
 
+.PHONY: repl
+repl: ## Run a REPL for lqccs
+	opam exec -- dune exec --root . bin/$(EXE).exe
+
 .PHONY: start
 start: all ## Run the produced executable
 	opam exec -- dune exec --root . bin/$(EXE).exe $(ARGS)
@@ -60,5 +64,13 @@ test_typecheck:  ## Run all the tests for the typechecker
 test_parser:  ## Run all the tests for the typechecker                                    
 	opam exec -- dune exec test/test_parser.exe
 
+.PHONY: test_eval
+test_eval:  ## Run all the tests for the evaluation                                    
+	opam exec -- dune exec test/test_eval.exe
+
+.PHONY: test_qop
+test_qop:  ## Run all the tests for the quantum operations                                    
+	opam exec -- dune exec test/test_qop.exe
+
 .PHONY: test
-test: test_parser test_typecheck ## Run all the tests
+test: test_parser test_typecheck test_eval test_qop ## Run all the tests

@@ -1,10 +1,10 @@
 open Ast
 open Symbol_table
-open Typechecker
+(* open Typechecker *)
 
 exception EvalException of Location.code_pos * string
 
-type ast_element =
+(*type ast_element =
   | Seq of seq
   | ExtChoice of external_choice
   | IntChoice of internal_choice
@@ -66,31 +66,13 @@ let rec eval_expr symtbl expr =
       | BLiteral lit -> Bool(lit)
       | Access acc -> eval_access symtbl acc)
 
-let rec eval_choice symtbl seq_list _ = 
-  List.map (fun choice ->
-    let new_scope = begin_block symtbl in
-    eval_seq new_scope choice
-  ) seq_list
-
-and eval_internal_choice symtbl internal_choice =
-  match internal_choice with
-  | { node; loc } -> (
-      match node with
-      | InternalChoice seq_list -> eval_choice symtbl seq_list loc
-      | IfThenElse (expr, then_branch, else_branch) -> 
-          match eval_expr symtbl expr with
-            | Bool(true) -> eval_internal_par symtbl then_branch
-            | Bool(false) -> eval_internal_par symtbl else_branch
-            | _ -> raise (TypeException ("Invalid guard", loc)))
-
 and eval_internal_par symtbl internal_par =
   match internal_par with
-  | { node = InternalPar internal_choice_list; _ } ->
-      List.map (eval_internal_choice symtbl) internal_choice_list |> ignore; []
+  | { node = InternalPar internal_choice_list; _ } -> []
 
 and eval_seq symtbl seq (Conf(qst, _, prob)) =
   match seq with
-  | { node = nod; loc } -> (
+  | { node = nod; loc } ->
       match nod with
       | Tau rest -> Some(Conf(qst, IntPar(rest), prob))
       | Measure (_, VarName(vname), rest) ->
@@ -103,72 +85,52 @@ and eval_seq symtbl seq (Conf(qst, _, prob)) =
       | Recv (Chan (_, _), _, rest) ->
           Some(Conf(qst, IntPar(rest), prob))
       | Send (Chan (_, _), _) -> 
-          None
+          None (* return None such that the caller knows this process is ended *)
       | Discard _ -> 
-          None)
-
-let eval_external_choice symtbl external_choice =
-  match external_choice with
-  | { node = ExternalChoice seq_list; loc } -> eval_choice symtbl seq_list loc
-
-let eval_external_par symtbl external_par =
+          None (* return None such that the caller knows this process is ended *)
+*)
+(*let eval_external_par symtbl external_par =
   match external_par with
-  | { node = ExternalPar external_choice_list; _ } ->
-      let _ = List.map (eval_external_choice symtbl) external_choice_list in
-      ()
+  | { node = ExternalPar external_choice_list; _ } -> []*)
 
-let eval_program symtbl prog =
-  match prog with
-  | Prog (external_par, _) -> eval_external_par symtbl external_par
-
-(* type ast_generic = Seq of Ast.seq | Expr of Ast.expr | Boh of Ast. *)
-
-let rec schedule2 fn results lis = match lis with
-  | [] -> results (* nothing to be executed, return the whole list of result *)
-  | proc_lis -> 
-    (* for each process to be scheduled *)
-    let (res_lis, new_lis) = List.fold_left (fun (res_lis, new_lis) proc ->
-      let (res, ended) = fn proc in (* execute one step of the process <proc>. Obtain the result and if it has ended *)
-      (* if it has ended, return the result on top of the other results
-         and return the list without the current process *)
-      if ended then (res::res_lis, new_lis)
-      else (res_lis, proc::new_lis) 
-    ) ([], []) proc_lis in
-    schedule2 fn res_lis new_lis
-
-let rec schedule fn acc lis = match lis with
-  | [] -> acc
-  | x::xs -> 
-    let (res, ended) = fn x in
-    if ended then schedule fn (res::acc) xs 
-    else schedule fn acc lis 
-
-let rec eval_conf symtbl cnf = match cnf with
+let eval_conf _ = () (*match cnf with
   | (Conf(_, Seq(seq), _)) -> 
-      (match eval_seq symtbl seq cnf with
-        | Some new_conf -> eval_conf symtbl new_conf
-        | None -> [cnf])
-  | (Conf(qs, ExtChoice({ node = ExternalChoice(ext_choice_lis); _ }), prob)) -> 
-      List.map (fun choice ->
-        eval_conf symtbl (Conf(qs, Seq(choice), prob))
-      ) ext_choice_lis
-  | (Conf(_, IntChoice(internal_choice), _)) -> 
-      let new_conf = eval_internal_choice symtbl internal_choice in
-      eval_conf symtbl new_conf
+      (* return the configuration after the first seq is executed *)
+      eval_seq symtbl seq cnf
+  | (Conf(qs, ExtChoice({ node = ExternalChoice(choice_lis); _ }), prob))
+  | (Conf(qs, IntChoice({ node = InternalChoice(choice_lis); _ }), prob)) -> 
+      eval_choice symtbl qs prob choice_lis
+  | (Conf(qs, IntChoice({ node = IfThenElse(expr, then_branch, else_branch); loc }), prob)) -> 
+      (match eval_expr symtbl expr with
+        | Bool(true)  -> eval_conf symtbl (Conf(qs, IntPar(then_branch), prob))
+        | Bool(false) -> eval_conf symtbl (Conf(qs, IntPar(else_branch), prob))
+        | _ -> raise (TypeException ("Invalid guard", loc)))
   | (Conf(_, ExtPar({ node = ExternalPar(ext_choice_lis); _ }), _)) -> 
       let (tobe_exec, rest_of_lis) = get_next ext_choice_lis in
       let new_conf = eval_conf symtbl tobe_exec in
       eval_conf symtbl new_conf
   | (Conf(_, IntPar(internal_par), _)) -> 
       let new_conf = eval_internal_par symtbl internal_par in
-      eval_conf symtbl new_conf
+      eval_conf symtbl new_conf *)
 
-let eval (prog : program) =
+(*and eval_choice symtbl qs prob choices =
+  List.fold_left (fun acc choice ->
+    let new_scope = begin_block symtbl in
+    let new_conf_opt = eval_conf new_scope (Conf(qs, Seq(choice), prob)) in
+    match new_conf_opt with
+      | Some new_conf -> new_conf::acc
+      | None -> acc
+  ) [] choices*)
+
+let eval (_ : program) =
+  (* build empty symbol table *)
   let symtbl = begin_block empty_table in
-  let starting_conf = match prog with
+  (* build the starting configuration. It is an external par *)
+  (*let starting_conf = match prog with
     | Prog (ext_par, _) -> 
-      (Conf([], ExtPar(ext_par), 1.0)) in
-  eval_conf symtbl starting_conf
+      (Conf([], ExtPar(ext_par), 1.0)) in *)
+  (* finally start by evaluating the starting configuration *)
+  eval_conf symtbl |> ignore
 
 (*
    Configuration = [ quantum state, ast, probability ]

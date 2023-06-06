@@ -23,14 +23,27 @@ let parse_file filename =
   let lexbuf = Lexing.from_string ~with_positions:true source in
   Parsing.parse Scanner.next_token lexbuf
 
+(*let parse_channel channel =
+  let lexbuf = Lexing.from_channel ~with_positions:true channel in
+  Parsing.parse Scanner.next_token lexbuf*)
+
+let parse_stdin =
+  let source = read_line () in
+  let lexbuf = Lexing.from_string ~with_positions:true source in
+  Parsing.parse Scanner.next_token lexbuf
+
+let parse filename =
+  if filename = "" then parse_stdin 
+  else parse_file filename
+
 let action_function = function
   | Parse -> 
     (* Parse given source code and print the abstract syntax tree *)
-    parse_file >> Ast.show_program >> (Printf.printf "%s")
+    parse >> Ast.show_program >> (Printf.printf "%s")
   | Type_check -> 
-    parse_file >> Typechecker.typecheck >> ignore
+    parse >> Typechecker.typecheck >> ignore
   | Interpret -> 
-    parse_file >> Eval.eval
+    parse >> Eval.eval
 
 let () =
   try
@@ -56,9 +69,7 @@ let () =
       Printf.sprintf "Usage:\t%s [options] <source_file>\n" Sys.argv.(0)
     in
     Arg.parse spec_list (fun file -> sourcefile := file) usage;
-    if !sourcefile = "" then (Arg.usage spec_list usage; exit 0 |> ignore)
-    else
-      try action_function !action !sourcefile with
+    try action_function !action !sourcefile with
 			| Parsing.Syntax_error (pos, msg) | Scanner.Lexing_error (pos, msg) ->
         let source = try load_file !sourcefile with _ -> "" in
         Errors.report_singleline "Error" source pos msg

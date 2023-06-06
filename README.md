@@ -22,7 +22,8 @@ To test the typecheck you can see the tests in [test_typecheck.ml](./test/test_t
   -o Place the output into file (default: a.out)
   -help  Display this list of options
   --help  Display this list of options
-``` 
+```
+If you want to run the program with a REPL, you can just call `make repl` and type the program from the command line.
 
 ### Install dependencies
 
