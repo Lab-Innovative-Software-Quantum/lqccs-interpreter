@@ -28,6 +28,7 @@ let parse_file filename =
   Parsing.parse Scanner.next_token lexbuf*)
 
 let parse_stdin =
+  Printf.printf "\nType the program. Press ENTER when you are done\n> "; Stdlib.flush_all();
   let source = read_line () in
   let lexbuf = Lexing.from_string ~with_positions:true source in
   Parsing.parse Scanner.next_token lexbuf
