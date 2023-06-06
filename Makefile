@@ -7,10 +7,6 @@ TEST_SOURCES := $(wildcard $(TESTDIR)/*.mc)
 ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 $(eval $(ARGS):;@:)
 
-.PHONY: all
-all: 
-	opam exec -- dune build --root .
-
 .PHONY: deps
 deps: ## Install development dependencies
 	opam install -y dune ocamlformat utop ocaml-lsp-server
@@ -24,12 +20,8 @@ build: ## Build the project, including non installable libraries and executables
 reset-parser-messages:
 	cp _build/default/lib/parserMessages.auto.messages ./lib/parserMessages.messages
 
-.PHONY: repl
-repl: ## Run a REPL for lqccs
-	opam exec -- dune exec --root . bin/$(EXE).exe
-
 .PHONY: start
-start: all ## Run the produced executable
+start: build ## Run the interpreter
 	opam exec -- dune exec --root . bin/$(EXE).exe $(ARGS)
 
 .PHONY: clean
