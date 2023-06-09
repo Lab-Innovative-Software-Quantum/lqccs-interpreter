@@ -2,6 +2,10 @@
 
 Interpreter for linear quantum CCS.
 
+# Contributors
+
+Ferraro Domenico | ferraro.domenico125@gmail.com
+
 ### Table of contents
 * [Grammar](#grammar)
 * [Usage](#usage)
