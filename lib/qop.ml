@@ -9,7 +9,7 @@ type measurement_result = {quantum_state: t list; value: int list; probability: 
 let debug = false
 
 (** Print the contents of a matrix if we are in debug mode *)
-let mat_debug mat = if debug then Mat.print mat else ()
+let mat_debug (mat : Mat.mat) = if debug then Mat.print mat else ()
 
 (** Round a float to two significant digits *)
 let round2 n = Float.round (n *. 100.) /. 100.
@@ -21,6 +21,17 @@ let make_id : Mat.mat =
     Mat.set id 1 0 {re = 0.0; im = 0.0}; Mat.set id 1 1 {re = 1.0; im = 0.0};
   id
 
+(** Returns the decimal representation of the provided binary string *)
+let binary_to_decimal (binary : int list) : int =
+  let rec binary_to_decimal_helper binary power acc =
+    match binary with
+    | [] -> acc
+    | bit :: rest ->
+      let decimal_value = bit * int_of_float (2. ** float_of_int power) in
+      binary_to_decimal_helper rest (power - 1) (acc + decimal_value)
+  in
+  binary_to_decimal_helper (List.rev binary) (List.length binary - 1) 0
+  
 (** Returns the 4x4 swap matrix *)
 let make_swap : Mat.mat = 
   let swap = Mat.empty 4 4 in
@@ -60,15 +71,15 @@ let rec cart_prod currlis lists =
   List.append this_res acc)
   [] (List.rev first_list)
 
-(** TODO *)
-let generate_cases q_state_len to_measure =
+(** Returns a list where each element contains the operations to apply to each qbit in order to simulate a certain measurement outcome *)
+let generate_cases (q_state_len : int) (to_measure : int list) : int list list =
   let ops_list = List.init q_state_len (fun ind -> if List.mem (ind + 1) to_measure then [0; 1] else [-1]) in
   cart_prod [] ops_list
 
 (** Return the appropriate matrix based on the requested operation i, where
       0: M0
       1: M1
-      -1: ID    
+     -1: ID    
 *)
 let select_measurement_mat i =
   let id = make_id in
@@ -89,7 +100,8 @@ let select_measurement_mat i =
     ops is expected to be a list of numbers of the following type:
       0: measure with M0
       1: measure with M1
-      -1: apply id *)
+     -1: apply id 
+*)
 let apply_measurement q_state_vec ops =
   (* Auxiliary function to perform tensor products *)
   let rec create_matrix lst acc =
@@ -114,15 +126,6 @@ let apply_measurement q_state_vec ops =
       mat_debug new_state;
       {quantum_state = new_state |> vec2list |> normalize; value = v; probability = prob.re |> round2} 
 
-let binary_to_decimal binary =
-  let rec binary_to_decimal_helper binary power acc =
-    match binary with
-    | [] -> acc
-    | bit :: rest ->
-      let decimal_value = bit * int_of_float (2. ** float_of_int power) in
-      binary_to_decimal_helper rest (power - 1) (acc + decimal_value)
-  in
-  binary_to_decimal_helper (List.rev binary) (List.length binary - 1) 0
 
 (** Returns the list of all the possible outcomes obtainable from the measurement of the provided list of qbits *)
 let measure (q_state : t list) (qbits : int list) : (t list * int * float) list =
@@ -366,4 +369,5 @@ let qop_cx (q_state : t list) (control_q : int) (target_q : int) : t list =
     in
       vec2list restored_state
 
+(** Returns the quantum state obtained by applying the identity *)
 let qop_i (q_state : t list) _ = q_state
