@@ -8,7 +8,7 @@ let debug = false
 
 exception EvalException of Location.code_pos * string
 
-type qstate = float list
+type qstate = Complex.t list
 type conf = Conf of qstate * Ast.program * float
 type distr = Distribution of conf list
 
@@ -27,7 +27,7 @@ let pretty_string_of_float number =
     string_number
 
 let string_of_qstate qst =
-  string_of_list (pretty_string_of_float) ~start_char:"[" ~end_char:"]" qst
+  string_of_list (string_of_complex) ~start_char:"[" ~end_char:"]" qst
 
 let string_of_conf (Conf(qst, prg, prob)) =
   Printf.sprintf "(%s, %s, %s)" (string_of_qstate qst)
@@ -93,7 +93,7 @@ let rec eval_expr symtbl expr =
 
 let eval_seq seq (Process(Memory(symtbl, channels), Conf(qst, prg, prob))) =
   match seq with
-  | { node = nod; loc } -> (
+  | { node = nod; _ } -> (
       match nod with
       | Tau rest -> [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), CanAdvance rest)]
       | Measure (acclist, VarName vname, rest) ->
@@ -125,7 +125,7 @@ let eval_seq seq (Process(Memory(symtbl, channels), Conf(qst, prg, prob))) =
             | H -> qop_h qst firstqbit
             | X -> qop_x qst firstqbit
             | I -> qop_i qst firstqbit
-            | Z -> raise (EvalException (loc, "Z not supported"))
+            | Z -> qop_z qst firstqbit
             | CX ->
                 let secqbit = List.hd (List.tl q_indexes) in
                 qop_cx qst firstqbit secqbit
@@ -379,8 +379,8 @@ let eval (prog : program) (qmax : int) =
   (* build empty channels symbol table *)
   let channels = begin_block empty_table in
   (* build the quantum state *)
-  let qst = List.init (pow 2 qmax) (fun _ -> 0.0) in
-  let qst = 1.0::(List.tl qst) in
+  let qst = List.init (pow 2 qmax) (fun _ -> Complex.zero) in
+  let qst = Complex.one::(List.tl qst) in
   (* build the starting distribution that is an external par *)
   let starting_distr = RunDistr([Process(Memory(symtbl, channels), Conf(qst, prog, 1.0))]) in
   (* evaluate the starting process with the starting configuration *)

@@ -30,7 +30,7 @@ let tests = [
 ]
 
 let _ = 
-  Printf.printf "\n";
+  Printf.printf "\n--- Parser ---\n";
   List.iteri (fun ind funtest ->
     funtest (ind + 1)
   ) tests
