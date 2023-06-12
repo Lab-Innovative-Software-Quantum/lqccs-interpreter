@@ -1,10 +1,10 @@
-open Owl
+open Complex
 
-(* module Mat = Dense.Matrix.Z *)
+module Mat = Owl.Dense.Matrix.Z
 
 exception QuantumException of string
 
-type measurement_result = {quantum_state: float list; value: int list; probability: float}
+type measurement_result = {quantum_state: t list; value: int list; probability: float}
 
 let debug = false
 
@@ -17,35 +17,36 @@ let round2 n = Float.round (n *. 100.) /. 100.
 (** Returns the 2x2 identity matrix  *)
 let make_id : Mat.mat =
   let id = Mat.empty 2 2 in
-    Mat.set id 0 0 (1.0); Mat.set id 0 1 (0.0);
-    Mat.set id 1 0 (0.0); Mat.set id 1 1 (1.0);
+    Mat.set id 0 0 {re = 1.0; im = 0.0}; Mat.set id 0 1 {re = 0.0; im = 0.0};
+    Mat.set id 1 0 {re = 0.0; im = 0.0}; Mat.set id 1 1 {re = 1.0; im = 0.0};
   id
 
 (** Returns the 4x4 swap matrix *)
 let make_swap : Mat.mat = 
   let swap = Mat.empty 4 4 in
-    Mat.set swap 0 0 (1.0); Mat.set swap 0 1 (0.0); Mat.set swap 0 2 (0.0); Mat.set swap 0 3 (0.0);
-    Mat.set swap 1 0 (0.0); Mat.set swap 1 1 (0.0); Mat.set swap 1 2 (1.0); Mat.set swap 1 3 (0.0);
-    Mat.set swap 2 0 (0.0); Mat.set swap 2 1 (1.0); Mat.set swap 2 2 (0.0); Mat.set swap 2 3 (0.0);
-    Mat.set swap 3 0 (0.0); Mat.set swap 3 1 (0.0); Mat.set swap 3 2 (0.0); Mat.set swap 3 3 (1.0);
+    Mat.set swap 0 0 {re = 1.0; im = 0.0}; Mat.set swap 0 1 {re = 0.0; im = 0.0}; Mat.set swap 0 2 {re = 0.0; im = 0.0}; Mat.set swap 0 3 {re = 0.0; im = 0.0};
+    Mat.set swap 1 0 {re = 0.0; im = 0.0}; Mat.set swap 1 1 {re = 0.0; im = 0.0}; Mat.set swap 1 2 {re = 1.0; im = 0.0}; Mat.set swap 1 3 {re = 0.0; im = 0.0};
+    Mat.set swap 2 0 {re = 0.0; im = 0.0}; Mat.set swap 2 1 {re = 1.0; im = 0.0}; Mat.set swap 2 2 {re = 0.0; im = 0.0}; Mat.set swap 2 3 {re = 0.0; im = 0.0};
+    Mat.set swap 3 0 {re = 0.0; im = 0.0}; Mat.set swap 3 1 {re = 0.0; im = 0.0}; Mat.set swap 3 2 {re = 0.0; im = 0.0}; Mat.set swap 3 3 {re = 1.0; im = 0.0};
   swap
 
-let normalize (values : float list) : float list =
-  let vec_length = sqrt (List.fold_left (fun acc el -> acc +. el*.el) 0. values) in
-  if vec_length > 0. then
-    List.map (fun el -> el /. vec_length) values
+(** Return the normalized vector *)
+let normalize (values : t list) : t list =
+  let vec_length = sqrt (List.fold_left (fun acc el -> add acc (mul el el)) zero values) in
+  if vec_length > zero then
+    List.map (fun el -> div el vec_length) values
   else
     values
 
 (** Returns a vector representing the input list *)
-let list2vec (lst : float list) : Mat.mat =
+let list2vec (lst : t list) : Mat.mat =
   let n = List.length lst in
   let vec = Mat.empty n 1 in
     List.iteri (fun i x -> Mat.set vec i 0 x) lst;
   vec
 
 (** Returns a list representing the input vector *)
-let vec2list (vec : Mat.mat) : float list = 
+let vec2list (vec : Mat.mat) : t list = 
   Mat.fold_rows (fun lst row -> (Mat.get row 0 0)::lst) [] vec |> List.rev 
 
 (** Perform the cartesian product of the provided lists *)
@@ -73,11 +74,11 @@ let select_measurement_mat i =
   let id = make_id in
   (* Measurement matrices *)
   let m0 = Mat.empty 2 2 in
-    Mat.set m0 0 0 (1.0); Mat.set m0 0 1 (0.0);
-    Mat.set m0 1 0 (0.0); Mat.set m0 1 1 (0.0);
+    Mat.set m0 0 0 {re = 1.0; im = 0.0}; Mat.set m0 0 1 {re = 0.0; im = 0.0};
+    Mat.set m0 1 0 {re = 0.0; im = 0.0}; Mat.set m0 1 1 {re = 0.0; im = 0.0};
   let m1 = Mat.empty 2 2 in
-    Mat.set m1 0 0 (0.0); Mat.set m1 0 1 (0.0);
-    Mat.set m1 1 0 (0.0); Mat.set m1 1 1 (1.0);
+    Mat.set m1 0 0 {re = 0.0; im = 0.0}; Mat.set m1 0 1 {re = 0.0; im = 0.0};
+    Mat.set m1 1 0 {re = 0.0; im = 0.0}; Mat.set m1 1 1 {re = 1.0; im = 0.0};
 
   match i with
   | 0 -> m0
@@ -104,14 +105,14 @@ let apply_measurement q_state_vec ops =
       let complete_mat = create_matrix rest initial_mat in
       let meas_mat = Mat.dot (Mat.transpose complete_mat) complete_mat in
       let prob = Mat.get (Mat.dot (Mat.dot (Mat.transpose q_state_vec) meas_mat) q_state_vec) 0 0 in
-      let new_state = if prob == 0. then 
+      let new_state = if prob == {re = 0.0; im = 0.0} then 
           Mat.zeros (Mat.col_num q_state_vec) 1
         else
           let _ = mat_debug meas_mat in
-          Mat.dot (Mat.mul_scalar meas_mat (1. /. (Float.sqrt prob))) q_state_vec in
+          Mat.dot (Mat.mul_scalar meas_mat (sqrt prob)) q_state_vec in
       let v = List.filter (fun op -> (op == 0) || op == 1) ops in
       mat_debug new_state;
-      {quantum_state = new_state |> vec2list |> normalize; value = v; probability = prob |> round2} 
+      {quantum_state = new_state |> vec2list |> normalize; value = v; probability = prob.re |> round2} 
 
 let binary_to_decimal binary =
   let rec binary_to_decimal_helper binary power acc =
@@ -124,15 +125,18 @@ let binary_to_decimal binary =
   binary_to_decimal_helper (List.rev binary) (List.length binary - 1) 0
 
 (** Returns the list of all the possible outcomes obtainable from the measurement of the provided list of qbits *)
-let measure (q_state : float list) (qbits : int list) : (float list * int * float) list =
+let measure (q_state : t list) (qbits : int list) : (t list * int * float) list =
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   let q_state_vec = list2vec q_state in
   let cases = generate_cases state_length qbits in
-  (* List.map (apply_measurement q_state_vec) cases *)
-  List.map (fun case ->
+  let results = List.map (fun case ->
     let {quantum_state; value; probability} = apply_measurement q_state_vec case in
     (quantum_state, (binary_to_decimal value), probability)
-  ) cases
+  ) cases in
+  List.filter (fun el -> match el with 
+    | (_, _, prob) when prob = 0.0 -> false
+    | _ -> true
+  ) results
 
 (** Swaps the ith (i+1)th qbits in place *)
 let step_forwards (q_state_vec : Mat.mat) (i : int) : Mat.mat =
@@ -202,14 +206,14 @@ let rec push state qbit_index boundary incr =
     push new_state (qbit_index + incr) boundary incr
     
 (** Returns the new quantum state obtained by applying the Hadamard gate to the ith qbit *)
-let qop_h (q_state : float list) (i : int) : float list = 
+let qop_h (q_state : t list) (i : int) : t list = 
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   if i < 1 || i > state_length then 
     raise (QuantumException "Index out of bounds");
   let id = make_id in
   let h = Mat.empty 2 2 in
-    Mat.set h 0 0 (1.0 /. sqrt 2.0); Mat.set h 0 1 (1.0 /. sqrt 2.0);
-    Mat.set h 1 0 (1.0 /. sqrt 2.0); Mat.set h 1 1 (-1.0 /. sqrt 2.0);
+    Mat.set h 0 0 {re = 1.0 /. Float.sqrt 2.0; im = 0.0}; Mat.set h 0 1 {re = 1.0 /. Float.sqrt 2.0; im = 0.0};
+    Mat.set h 1 0 {re = 1.0 /. Float.sqrt 2.0; im = 0.0}; Mat.set h 1 1 {re = -1.0 /. Float.sqrt 2.0; im = 0.0};
   let q_state_vec = list2vec q_state in
   (* Create the matrix which applies Hadamard to the ith qbit and the identity to all the others *)
   let rec create_matrix m_tmp j =
@@ -229,14 +233,14 @@ let qop_h (q_state : float list) (i : int) : float list =
     Mat.dot m q_state_vec |> vec2list
       
 (** Returns the new quantum state obtained by applying the X gate to the ith qbit *)
-let qop_x (q_state : float list) (i : int) : float list =
+let qop_x (q_state : t list) (i : int) : t list =
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   if i < 1 || i > state_length then 
     raise (QuantumException "Index out of bounds");
   let id = make_id in
   let x = Mat.empty 2 2 in
-    Mat.set x 0 0 (0.0); Mat.set x 0 1 (1.0);
-    Mat.set x 1 0 (1.0); Mat.set x 1 1 (0.0);
+    Mat.set x 0 0 {re = 0.0; im = 0.0}; Mat.set x 0 1 {re = 1.0; im = 0.0};
+    Mat.set x 1 0 {re = 1.0; im = 0.0}; Mat.set x 1 1 {re = 0.0; im = 0.0};
   let q_state_vec = list2vec q_state in
   (* Create the matrix which applies Not to the ith qbit and the identity to all the others *)
   let rec create_matrix m_tmp j =
@@ -256,14 +260,14 @@ let qop_x (q_state : float list) (i : int) : float list =
     Mat.dot m q_state_vec |> vec2list
     
 (** Returns the new quantum state obtained by applying the Z gate to the ith qbit *)
-let qop_z (q_state : float list) (i : int) : float list =
+let qop_z (q_state : t list) (i : int) : t list =
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   if i < 1 || i > state_length then 
     raise (QuantumException "Index out of bounds");
   let id = make_id in
   let z = Mat.empty 2 2 in
-    Mat.set z 0 0 (1.0); Mat.set z 0 1 (0.0);
-    Mat.set z 1 0 (0.0); Mat.set z 1 1 (-1.0);
+    Mat.set z 0 0 {re = 1.0; im = 0.0}; Mat.set z 0 1 {re = 0.0; im = 0.0};
+    Mat.set z 1 0 {re = 0.0; im = 0.0}; Mat.set z 1 1 {re = -1.0; im = 0.0};
   let q_state_vec = list2vec q_state in
   (* Create the matrix which applies Not to the ith qbit and the identity to all the others *)
   let rec create_matrix m_tmp j =
@@ -282,19 +286,46 @@ let qop_z (q_state : float list) (i : int) : float list =
     let m = create_matrix initial_m 2 in
     Mat.dot m q_state_vec |> vec2list
 
+(** Returns the new quantum state obtained by applying the Y gate to the ith qbit *)
+let qop_y (q_state : t list) (i : int) : t list =
+  let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
+  if i < 1 || i > state_length then 
+    raise (QuantumException "Index out of bounds");
+  let id = make_id in
+  let y = Mat.empty 2 2 in
+    Mat.set y 0 0 {re = 0.0; im = 0.0}; Mat.set y 0 1 {re = 0.0; im = -1.0};
+    Mat.set y 1 0 {re = 0.0; im = 1.0}; Mat.set y 1 1 {re = 0.0; im = 0.0};
+  let q_state_vec = list2vec q_state in
+  (* Create the matrix which applies Not to the ith qbit and the identity to all the others *)
+  let rec create_matrix m_tmp j =
+    if j > state_length then
+      m_tmp
+    else
+      if j = i then 
+        let new_m = Mat.kron m_tmp y in
+          create_matrix new_m (j + 1)
+      else
+        let new_m = Mat.kron m_tmp id in
+        create_matrix new_m (j + 1)
+  in 
+    (* Compute the resulting quantum state *)
+    let initial_m = if i = 1 then y else id in
+    let m = create_matrix initial_m 2 in
+    Mat.dot m q_state_vec |> vec2list
+
 (** Returns the new quantum state obtained by applying the CNOT gate to the ith and jth qbits,
     where i is the control qbit and j is the target qbit *)
-let qop_cx (q_state : float list) (control_q : int) (target_q : int) : float list =
+let qop_cx (q_state : t list) (control_q : int) (target_q : int) : t list =
   if control_q = target_q then raise (QuantumException "The control and target qbits must be distinct");
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   if control_q < 1 || control_q > state_length || target_q < 1 || target_q > state_length then 
     raise (QuantumException "Index out of bounds");
   let id = make_id in
   let cx = Mat.empty 4 4 in
-    Mat.set cx 0 0 (1.0); Mat.set cx 0 1 (0.0); Mat.set cx 0 2 (0.0); Mat.set cx 0 3 (0.0);
-    Mat.set cx 1 0 (0.0); Mat.set cx 1 1 (1.0); Mat.set cx 1 2 (0.0); Mat.set cx 1 3 (0.0);
-    Mat.set cx 2 0 (0.0); Mat.set cx 2 1 (0.0); Mat.set cx 2 2 (0.0); Mat.set cx 2 3 (1.0);
-    Mat.set cx 3 0 (0.0); Mat.set cx 3 1 (0.0); Mat.set cx 3 2 (1.0); Mat.set cx 3 3 (0.0);
+    Mat.set cx 0 0 {re = 1.0; im = 0.0}; Mat.set cx 0 1 {re = 0.0; im = 0.0}; Mat.set cx 0 2 {re = 0.0; im = 0.0}; Mat.set cx 0 3 {re = 0.0; im = 0.0};
+    Mat.set cx 1 0 {re = 0.0; im = 0.0}; Mat.set cx 1 1 {re = 1.0; im = 0.0}; Mat.set cx 1 2 {re = 0.0; im = 0.0}; Mat.set cx 1 3 {re = 0.0; im = 0.0};
+    Mat.set cx 2 0 {re = 0.0; im = 0.0}; Mat.set cx 2 1 {re = 0.0; im = 0.0}; Mat.set cx 2 2 {re = 0.0; im = 0.0}; Mat.set cx 2 3 {re = 1.0; im = 0.0};
+    Mat.set cx 3 0 {re = 0.0; im = 0.0}; Mat.set cx 3 1 {re = 0.0; im = 0.0}; Mat.set cx 3 2 {re = 1.0; im = 0.0}; Mat.set cx 3 3 {re = 0.0; im = 0.0};
   let q_state_vec = list2vec q_state in
   (* Create the matrix which applies CNot to the ith and jth qbits and the identity to all the others *)
   let rec create_matrix m_tmp j =
@@ -335,4 +366,4 @@ let qop_cx (q_state : float list) (control_q : int) (target_q : int) : float lis
     in
       vec2list restored_state
 
-let qop_i (q_state : float list) _ = q_state
+let qop_i (q_state : t list) _ = q_state

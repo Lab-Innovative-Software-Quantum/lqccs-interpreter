@@ -16,6 +16,9 @@ let binop_to_str op =
 
 let uop_to_str op = match op with Not -> "NOT " | Neg -> "-"
 
+let string_of_complex (n : Complex.t) =
+  Printf.sprintf "%f+%fi" n.Complex.re n.Complex.im
+
 let string_of_list printer ?(separator = ", ") ?(start_char = "")
     ?(end_char = "") lst =
   let buffer = Buffer.create 32 in
