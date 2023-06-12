@@ -156,5 +156,5 @@ let tests =
   ]
 
 let _ =
-  Printf.printf "\n";
+  Printf.printf "\n--- Eval ---\n";
   List.iteri (fun ind funtest -> funtest (ind + 1)) tests

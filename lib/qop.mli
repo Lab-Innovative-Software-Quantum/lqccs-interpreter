@@ -1,5 +1,7 @@
 open Owl
 
+exception QuantumException of string
+
 type measurement_result = {quantum_state: float list; value: int list; probability: float}
 
 (* Utility functions *)
