@@ -16,8 +16,18 @@ let binop_to_str op =
 
 let uop_to_str op = match op with Not -> "NOT " | Neg -> "-"
 
+let pretty_string_of_float number =
+  let string_number = string_of_float number in
+  let str_length = String.length string_number in
+  if str_length > 0 && String.get string_number (str_length - 1) = '.' then
+    String.sub string_number 0 (str_length - 1)
+  else
+    string_number
+
 let string_of_complex (n : Complex.t) =
-  Printf.sprintf "%f+%fi" n.Complex.re n.Complex.im
+  let imstr = (pretty_string_of_float n.Complex.im) in
+  let imstr = if imstr = "0" then "" else "+" ^ imstr ^ "i" in
+  Printf.sprintf "%s%s" (pretty_string_of_float n.Complex.re) imstr
 
 let string_of_list printer ?(separator = ", ") ?(start_char = "")
     ?(end_char = "") lst =

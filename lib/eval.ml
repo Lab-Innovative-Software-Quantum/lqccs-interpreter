@@ -291,7 +291,39 @@ let rec pow a = function
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
 
-let rec eval_program distributions passes =
+let can_continue distributions = List.fold_left (fun acc_distrib_list (RunDistr(proclis)) ->
+    if acc_distrib_list then acc_distrib_list else
+      List.fold_left (fun acc_proc (Process(Memory(_, channels), Conf(_, Prog(ext_par, _), _))) ->
+        if acc_proc then acc_proc else
+          match ext_par.node with
+            | ExternalPar (extchoices) -> List.fold_left (fun acc_ext_choices choice ->
+                if acc_ext_choices then acc_ext_choices else
+                  (match choice.node with
+                  | ExternalChoice(seqlis) -> List.fold_left (fun acc_seq_lis seq ->
+                      if acc_seq_lis then acc_seq_lis else
+                        (match seq.node with
+                        | Send(Chan(cname, _), _) -> 
+                            (* check if the channel has a pending value *)
+                            let c = lookup (VarName cname) channels in 
+                            (match c with
+                            | Some (_, true) -> true (* if the channel has a pending value, who was received *)
+                            | Some (_, false) -> false (* if the channel has a pending value, who was NOT received *)
+                            | None -> true (* if the channel has NOT a pending value *))
+                        | Recv(Chan(cname, _), _, _) -> 
+                            (* check if the channel has a pending value *)
+                              let c = lookup (VarName cname) channels in 
+                            (match c with
+                            | Some (_, true) -> true (* another process already received the pending value *)
+                            | Some (_, false) -> true (* if the channel has a pending value, who was NOT received *)
+                            | None -> false (* if the channel has NOT a pending value *))
+                        | Discard(_) -> false
+                        | _ -> true (* process can continue *))
+                    ) acc_ext_choices seqlis)
+              ) acc_proc extchoices
+      ) acc_distrib_list proclis
+  ) false distributions
+
+let rec eval_program distributions =
   let after_preprocessing = List.fold_left (fun acc (RunDistr(proclist)) ->
     let processes = List.map (fun proc ->
       match extpar_of_proc proc with
@@ -324,17 +356,8 @@ let rec eval_program distributions passes =
 
   debug_distributions "PERFORMED ONE STEP" after_one_step;
 
-  let max_passes = List.fold_left (fun tot (RunDistr(proclis)) ->
-    List.fold_left (fun tot2 proc ->
-      let extpar = extpar_of_proc proc in
-      (match extpar.node with
-      | ExternalPar(choices) -> (pow (List.length choices) 2) + tot2)
-    ) tot proclis
-  ) 1 after_one_step in
-  if debug then Printf.printf "Max passes: %d\n" max_passes;
-  if passes >= (max_passes * List.length after_one_step)
-  then after_one_step
-  else eval_program after_one_step (passes + 1)
+  if can_continue after_one_step then eval_program after_one_step
+  else after_one_step
 
 let value_to_ast value loc =
   { node = (match value with
@@ -384,7 +407,7 @@ let eval (prog : program) (qmax : int) =
   (* build the starting distribution that is an external par *)
   let starting_distr = RunDistr([Process(Memory(symtbl, channels), Conf(qst, prog, 1.0))]) in
   (* evaluate the starting process with the starting configuration *)
-  let ending_distr = eval_program [starting_distr] 0 in
+  let ending_distr = eval_program [starting_distr] in
   List.map (fun (RunDistr(proclist)) ->
     Distribution(
       List.map (fun (Process(Memory(symtbl, _), cnf)) -> enhance_conf symtbl cnf) proclist

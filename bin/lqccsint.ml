@@ -20,7 +20,7 @@ let parse source =
   Parsing.parse Scanner.next_token lexbuf
 
 let print_distributions distributions =
-  Printf.printf "\nDistributions:\n";
+  Printf.printf "\nFinal distributions:\n";
   List.iter
     (fun distr -> Printf.printf "%s\n" (Eval.string_of_distribution distr))
     distributions;
