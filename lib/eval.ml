@@ -227,7 +227,7 @@ let choices_to_processes external_choice_list
   List.map
     (fun ext_choices ->
       Process
-        ( Memory (symtbl, channels),
+        ( Memory (symtbl, begin_block channels),
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
     cp
 
@@ -374,7 +374,7 @@ let can_continue distributions =
                                       | Some (_, true) ->
                                           true
                                           (* if the channel has a pending value, who was received *)
-                                      | Some (_, false) ->
+                                      | Some (_, false) -> 
                                           false
                                           (* if the channel has a pending value, who was NOT received *)
                                       | None -> true
@@ -401,6 +401,8 @@ let can_continue distributions =
     false distributions
 
 let rec eval_program distributions =
+  debug_distributions "BEFORE PREPROCESSING" distributions;
+
   let after_preprocessing =
     List.fold_left
       (fun acc (RunDistr proclist) ->
@@ -419,7 +421,7 @@ let rec eval_program distributions =
       [] distributions
   in
   let after_preprocessing = List.rev after_preprocessing in
-
+  
   debug_distributions "APPLIED PREPROCESSING" after_preprocessing;
 
   let after_one_step =

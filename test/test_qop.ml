@@ -15,7 +15,7 @@ let assert_unary_gate_res gate q_state qbit_index expected_res ind =
     if res = expected_res then
       Printf.printf "[ OK ] Test #%2d\n" ind
     else
-      Printf.printf "[FAIL] Test #%2d:\n\tExpected:%s\tGot:%s\n" ind (list2string expected_res) (list2string res)
+      Printf.printf "\027[1;31m[FAIL] Test #%2d:\n\tExpected:%s\tGot:%s\n\027[0m" ind (list2string expected_res) (list2string res)
   with
     | Lqccs.Qop.QuantumException msg -> Printf.printf "[ FAIL ] Test #%2d: %s\n" ind msg
 
@@ -23,7 +23,7 @@ let assert_unary_gate_res gate q_state qbit_index expected_res ind =
 let assert_unary_gate_except gate q_state qbit_index ind =
   try
     let _ = gate q_state qbit_index in
-    Printf.printf "[FAIL] Test #%2d should fail but doesn't\n" ind
+    Printf.printf "\027[1;31m[FAIL] Test #%2d should fail but doesn't\n\027[0m" ind
   with
     | Lqccs.Qop.QuantumException msg ->  Printf.printf "[ OK ] Test #%2d: %s\n" ind msg
 
@@ -34,9 +34,9 @@ let assert_cx_res q_state control_q target_q expected_res ind =
     if res = expected_res then
       Printf.printf "[ OK ] Test #%2d\n" ind
     else
-      Printf.printf "[FAIL] Test #%2d:\n\tExpected:%s\tGot:%s\n" ind (list2string expected_res) (list2string res)
+      Printf.printf "\027[1;31m[FAIL] Test #%2d:\n\tExpected:%s\tGot:%s\n\027[0m" ind (list2string expected_res) (list2string res)
   with
-    | Lqccs.Qop.QuantumException msg -> Printf.printf "[FAIL] Test #%2d: %s\n" ind msg
+    | Lqccs.Qop.QuantumException msg -> Printf.printf "\027[1;31m[FAIL] Test #%2d: %s\n\027[0m" ind msg
 
 let rec string_of_conf_qop (clist : (Complex.t list * int * float) list) = match clist with
  | [] -> ""
@@ -49,9 +49,9 @@ let assert_measure_res q_state qbits expected_res ind =
     if res = expected_res then
       Printf.printf "[ OK ] Test #%2d\n" ind
     else
-      Printf.printf "[FAIL] Test #%2d:\n\tExpected: %s\n\tGot: %s\n" ind (string_of_conf_qop expected_res) (string_of_conf_qop res)
+      Printf.printf "\027[1;31m[FAIL] Test #%2d:\n\tExpected: %s\n\tGot: %s\n\027[0m" ind (string_of_conf_qop expected_res) (string_of_conf_qop res)
   with
-    | Lqccs.Qop.QuantumException msg -> Printf.printf "[FAIL] Test #%2d: %s\n" ind msg
+    | Lqccs.Qop.QuantumException msg -> Printf.printf "\027[1;31m[FAIL] Test #%2d: %s\n\027[0m" ind msg
 
 (** List of tests to perform *)
 let tests =

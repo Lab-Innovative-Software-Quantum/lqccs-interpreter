@@ -17,10 +17,14 @@ let add_entry symbol info table =
       (* allow variable shadowing *)
       Scope (p, htbl)
 
-let remove_entry symbol table =
+let rec remove_entry symbol table =
   match table with
   | Empty -> failwith "Error: cannot remove symbol from empty node"
-  | Scope (p, htbl) -> Hashtbl.remove htbl symbol; Scope (p, htbl)
+  | Scope (p, htbl) -> 
+      if Hashtbl.mem htbl symbol then (
+        Hashtbl.remove htbl symbol; 
+        Scope (p, htbl)
+      ) else remove_entry symbol p
 
 let of_alist (entries : (Ast.var * 'a) list) =
   let add_entry table (id, entry) = add_entry id entry table in

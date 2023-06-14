@@ -10,7 +10,7 @@ let assertException source ind =
       ind
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Lqccs.Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, _) ->
@@ -25,11 +25,11 @@ let assertNotException source ind =
     Printf.printf "[ OK ] Test #%2d\n" ind
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Lqccs.Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, pos) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Lqccs.Errors.report_multiline header source pos msg;
       Stdlib.flush_all ()
 
@@ -131,6 +131,8 @@ let tests =
     assertException "c1:int?x.c2:bool!not x \\ ()";
     (* 43- Not of bool *)
     assertNotException "c:bool?x.c:bool!not x \\ ()";
+    (* 44- error 5 from professors feedback *)
+    assertException "  d:int?x.e:int!0 || c:int?z.(d:int!1 || e:int?y.if x = 0 then a:int!42 else b:int!69) || c:int!0 \\ ()"
   ]
 
 let _ =

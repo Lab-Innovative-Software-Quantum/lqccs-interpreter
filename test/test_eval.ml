@@ -29,33 +29,34 @@ let assertResult source expected_results ind =
               raise (WrongProb (Conf (qst, ast_res, prob))))
           conflist expected_conflist)
       distrlist expected_results;
-    Printf.printf "[ OK ] Test #%2d\n" ind
+    Printf.printf "[ OK ] Test #%2d\n" ind;
+    Stdlib.flush_all ()
   with
   | Scanner.Lexing_error (pos, msg) | Parsing.Syntax_error (pos, msg) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Lqccs.Errors.report_singleline header source pos msg;
       Stdlib.flush_all ()
   | Typechecker.TypeException (msg, pos) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Lqccs.Errors.report_multiline header source pos msg;
       Stdlib.flush_all ()
   | Eval.EvalException (pos, msg) ->
-      let header = Printf.sprintf "[FAIL] Test #%2d" ind in
+      let header = Printf.sprintf "\027[1;31m[FAIL] Test #%2d\027[0m" ind in
       Errors.report_multiline header source pos msg;
       Stdlib.flush_all ()
   | WrongQstate given_conf ->
-      Printf.printf "[FAIL] Test #%2d: bad quantum state in conf %s\n" ind
+      Printf.printf "\027[1;31m[FAIL] Test #%2d: bad quantum state in conf %s\n\027[0m" ind
         (string_of_conf given_conf)
   | WrongAst given_conf ->
-      Printf.printf "[FAIL] Test #%2d: bad ast in conf %s\n" ind
+      Printf.printf "\027[1;31m[FAIL] Test #%2d: bad ast in conf %s\n\027[0m" ind
         (string_of_conf given_conf)
   | WrongProb given_conf ->
-      Printf.printf "[FAIL] Test #%2d: bad probability in conf %s\n" ind
+      Printf.printf "\027[1;31m[FAIL] Test #%2d: bad probability in conf %s\n\027[0m" ind
         (string_of_conf given_conf)
   | Invalid_argument _ ->
-      Printf.printf "[FAIL] Test #%2d: result lists have different length\n" ind
+      Printf.printf "\027[1;31m[FAIL] Test #%2d: result lists have different length\n\027[0m" ind
   | exn ->
-      Printf.printf "[FAIL] Test #%2d: %s\n" ind (Printexc.to_string exn)
+      Printf.printf "\027[1;31m[FAIL] Test #%2d: %s\n" ind (Printexc.to_string exn)
 
 let minus_one = {re = -1.0; im = 0.0}
 
@@ -64,26 +65,26 @@ let tests =
     (* 1- Discard a variable *)
     assertResult "M(q1 > x).Discard(q1) \\ ()"
       [
-        [ ([ one; zero ], "Discard(q1)", 1.0); ];
+        [([one; zero], "Discard(q1)", 1.0)];
       ];
     (* 2- Empty discard after a tau *)
     assertResult "Tau.Discard() \\ ()" [ [ ([one], "Discard()", 1.0) ] ];
     (* 3- Parallel after measurement *)
     assertResult "M(q1 > x).Discard(q1) || Discard() \\ ()"
       [
-        [ ([ one; zero ], "Discard() || Discard(q1)", 1.0)];
+        [([one; zero], "Discard() || Discard(q1)", 1.0)];
       ];
     (* 4- Choice after measurement *)
     assertResult "(M(q1 > x).(Discard(q1) ++ c:quant!q1)) \\ ()"
       [
-        [ ([ one; zero ], "c:quant!q1", 1.0)];
-        [ ([ one; zero ], "Discard(q1)", 1.0)];
+        [([one; zero], "c:quant!q1", 1.0)];
+        [([one; zero], "Discard(q1)", 1.0)];
       ];
     (* 5- Choice with send *)
     assertResult "(Discard(q1) ++ c:quant!q1) \\ ()"
       [
-        [ ([ one; zero ], "c:quant!q1", 1.0) ];
-        [ ([ one; zero ], "Discard(q1)", 1.0) ];
+        [([one; zero], "c:quant!q1", 1.0) ];
+        [([one; zero], "Discard(q1)", 1.0) ];
       ];
     (* 6- If after tau *)
     assertResult "Tau.if 0 = 0 then Discard() else c:int!5 \\ ()" [[([one], "Discard()", 1.0)]];
@@ -164,8 +165,25 @@ let tests =
       [
         [([one; zero], "Discard(q1)", 1.0)]
       ];
+    (* 20- error 2 from professors feedback *)
+    assertResult "(c:quant!q1 ++ Discard(q1)) || c:quant?x.Discard(x) \\ ()"
+      [
+        [([one; zero], "c:quant?x.Discard(x) || Discard(q1)", 1.0)];
+        [([one; zero], "Discard(q1)", 1.0)]
+      ];
+    (* 21- error 4 from professors feedback *)
+    assertResult "d:int?x.e:int!0 || c:int?z.(d:int!1 || e:int?y.if z = 0 then a:int!42 else b:int!666) || c:int!0 \\ ()"
+      [
+        [([one]), "a:int!42", 1.0]
+      ];
+    (* 22- error 1 from professors feedback ??? *)
+    assertResult "a:int!0 ++ Discard() || Tau.b:int!1 \\ ()"
+      [
+        [([one], "Discard() || b:int!1", 1.0)];
+        [([one], "a:int!0 || b:int!1", 1.0)]
+      ];
   ]
 
-let _ =
+  let _ =
   Printf.printf "\n--- Eval ---\n";
   List.iteri (fun ind funtest -> funtest (ind + 1)) tests
