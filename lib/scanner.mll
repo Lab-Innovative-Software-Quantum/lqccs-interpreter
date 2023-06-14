@@ -13,7 +13,7 @@
 		tbl
 
 	let keywords_table =
-		create_hashtable 18 [
+		create_hashtable 20 [
 			("M",		MEASURE);
 			("Discard",	DISCARD);
 			("Tau",		TAU);
@@ -32,6 +32,7 @@
 			("X", 		QOP_X);
 			("I", 		QOP_I);
 			("Z", 		QOP_Z);
+			("Y", 		QOP_Y);
 			("CX", 		QOP_CX);
 		]
 

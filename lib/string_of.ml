@@ -26,8 +26,12 @@ let pretty_string_of_float number =
 
 let string_of_complex (n : Complex.t) =
   let imstr = (pretty_string_of_float n.Complex.im) in
-  let imstr = if imstr = "0" then "" else "+" ^ imstr ^ "i" in
-  Printf.sprintf "%s%s" (pretty_string_of_float n.Complex.re) imstr
+  let imstr = if imstr = "0" then "" else imstr ^ "i" in
+  let realstr = (pretty_string_of_float n.Complex.re) in
+  let realstr = if imstr <> "" && realstr = "0" then "" else realstr in
+  let plus = if imstr = "" || realstr = "" then "" else "+" in
+  let imstr = if imstr = "1i" then "i" else imstr in
+  Printf.sprintf "%s%s%s" realstr plus imstr
 
 let string_of_list printer ?(separator = ", ") ?(start_char = "")
     ?(end_char = "") lst =
@@ -83,7 +87,7 @@ and string_of_seq seq =
         (string_of_internal_par rest)
   | QOp (op, acclist, rest) ->
       let qopstr =
-        match op with X -> "X" | I -> "I" | Z -> "Z" | CX -> "CX" | H -> "H"
+        match op with X -> "X" | I -> "I" | Z -> "Z" | Y -> "Y" | CX -> "CX" | H -> "H"
       in
       Printf.sprintf "%s(%s).%s" qopstr
         (string_of_acclist acclist)

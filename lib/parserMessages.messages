@@ -71,7 +71,7 @@ program: QOP_Z LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -101,9 +101,76 @@ program: QOP_Z LPAREN ID RPAREN DOT THEN
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
-program: QOP_X THEN
+program: QOP_Y THEN
 ##
 ## Ends in an error in state: 11.
+##
+## seq -> QOP_Y . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_Y
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_Y LPAREN THEN
+##
+## Ends in an error in state: 12.
+##
+## seq -> QOP_Y LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_Y LPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_Y LPAREN ID GT
+##
+## Ends in an error in state: 13.
+##
+## seq -> QOP_Y LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_Y LPAREN nonempty_access_list
+##
+## WARNING: This example involves spurious reductions.
+## This implies that, although the LR(1) items shown above provide an
+## accurate view of the past (what has been recognized so far), they
+## may provide an INCOMPLETE view of the future (what was expected next).
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_Y LPAREN ID RPAREN THEN
+##
+## Ends in an error in state: 14.
+##
+## seq -> QOP_Y LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_Y LPAREN nonempty_access_list RPAREN
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_Y LPAREN ID RPAREN DOT THEN
+##
+## Ends in an error in state: 15.
+##
+## seq -> QOP_Y LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
+##
+## The known suffix of the stack is as follows:
+## QOP_Y LPAREN nonempty_access_list RPAREN DOT
+##
+
+<YOUR SYNTAX ERROR MESSAGE HERE>
+
+program: QOP_X THEN
+##
+## Ends in an error in state: 16.
 ##
 ## seq -> QOP_X . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -115,7 +182,7 @@ program: QOP_X THEN
 
 program: QOP_X LPAREN THEN
 ##
-## Ends in an error in state: 12.
+## Ends in an error in state: 17.
 ##
 ## seq -> QOP_X LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -127,7 +194,7 @@ program: QOP_X LPAREN THEN
 
 program: QOP_X LPAREN ID GT
 ##
-## Ends in an error in state: 13.
+## Ends in an error in state: 18.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -138,7 +205,7 @@ program: QOP_X LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -146,7 +213,7 @@ program: QOP_X LPAREN ID GT
 
 program: QOP_X LPAREN ID RPAREN THEN
 ##
-## Ends in an error in state: 14.
+## Ends in an error in state: 19.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -158,7 +225,7 @@ program: QOP_X LPAREN ID RPAREN THEN
 
 program: QOP_X LPAREN ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 15.
+## Ends in an error in state: 20.
 ##
 ## seq -> QOP_X LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -170,7 +237,7 @@ program: QOP_X LPAREN ID RPAREN DOT THEN
 
 program: QOP_I THEN
 ##
-## Ends in an error in state: 16.
+## Ends in an error in state: 21.
 ##
 ## seq -> QOP_I . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -182,7 +249,7 @@ program: QOP_I THEN
 
 program: QOP_I LPAREN THEN
 ##
-## Ends in an error in state: 17.
+## Ends in an error in state: 22.
 ##
 ## seq -> QOP_I LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -194,7 +261,7 @@ program: QOP_I LPAREN THEN
 
 program: QOP_I LPAREN ID GT
 ##
-## Ends in an error in state: 18.
+## Ends in an error in state: 23.
 ##
 ## seq -> QOP_I LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -205,7 +272,7 @@ program: QOP_I LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -213,7 +280,7 @@ program: QOP_I LPAREN ID GT
 
 program: QOP_I LPAREN ID RPAREN THEN
 ##
-## Ends in an error in state: 19.
+## Ends in an error in state: 24.
 ##
 ## seq -> QOP_I LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -225,7 +292,7 @@ program: QOP_I LPAREN ID RPAREN THEN
 
 program: QOP_I LPAREN ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 20.
+## Ends in an error in state: 25.
 ##
 ## seq -> QOP_I LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -237,7 +304,7 @@ program: QOP_I LPAREN ID RPAREN DOT THEN
 
 program: QOP_H THEN
 ##
-## Ends in an error in state: 21.
+## Ends in an error in state: 26.
 ##
 ## seq -> QOP_H . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -249,7 +316,7 @@ program: QOP_H THEN
 
 program: QOP_H LPAREN THEN
 ##
-## Ends in an error in state: 22.
+## Ends in an error in state: 27.
 ##
 ## seq -> QOP_H LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -261,7 +328,7 @@ program: QOP_H LPAREN THEN
 
 program: QOP_H LPAREN ID GT
 ##
-## Ends in an error in state: 23.
+## Ends in an error in state: 28.
 ##
 ## seq -> QOP_H LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -272,7 +339,7 @@ program: QOP_H LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -280,7 +347,7 @@ program: QOP_H LPAREN ID GT
 
 program: QOP_H LPAREN ID RPAREN THEN
 ##
-## Ends in an error in state: 24.
+## Ends in an error in state: 29.
 ##
 ## seq -> QOP_H LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -292,7 +359,7 @@ program: QOP_H LPAREN ID RPAREN THEN
 
 program: QOP_H LPAREN ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 25.
+## Ends in an error in state: 30.
 ##
 ## seq -> QOP_H LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -304,7 +371,7 @@ program: QOP_H LPAREN ID RPAREN DOT THEN
 
 program: QOP_CX THEN
 ##
-## Ends in an error in state: 26.
+## Ends in an error in state: 31.
 ##
 ## seq -> QOP_CX . LPAREN nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -316,7 +383,7 @@ program: QOP_CX THEN
 
 program: QOP_CX LPAREN THEN
 ##
-## Ends in an error in state: 27.
+## Ends in an error in state: 32.
 ##
 ## seq -> QOP_CX LPAREN . nonempty_access_list RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -328,7 +395,7 @@ program: QOP_CX LPAREN THEN
 
 program: QOP_CX LPAREN ID GT
 ##
-## Ends in an error in state: 28.
+## Ends in an error in state: 33.
 ##
 ## seq -> QOP_CX LPAREN nonempty_access_list . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -339,7 +406,7 @@ program: QOP_CX LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -347,7 +414,7 @@ program: QOP_CX LPAREN ID GT
 
 program: QOP_CX LPAREN ID RPAREN THEN
 ##
-## Ends in an error in state: 29.
+## Ends in an error in state: 34.
 ##
 ## seq -> QOP_CX LPAREN nonempty_access_list RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -359,7 +426,7 @@ program: QOP_CX LPAREN ID RPAREN THEN
 
 program: QOP_CX LPAREN ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 30.
+## Ends in an error in state: 35.
 ##
 ## seq -> QOP_CX LPAREN nonempty_access_list RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -371,7 +438,7 @@ program: QOP_CX LPAREN ID RPAREN DOT THEN
 
 program: MEASURE THEN
 ##
-## Ends in an error in state: 31.
+## Ends in an error in state: 36.
 ##
 ## seq -> MEASURE . LPAREN nonempty_access_list GT ID RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -383,7 +450,7 @@ program: MEASURE THEN
 
 program: MEASURE LPAREN THEN
 ##
-## Ends in an error in state: 32.
+## Ends in an error in state: 37.
 ##
 ## seq -> MEASURE LPAREN . nonempty_access_list GT ID RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -395,7 +462,7 @@ program: MEASURE LPAREN THEN
 
 program: MEASURE LPAREN ID RPAREN
 ##
-## Ends in an error in state: 33.
+## Ends in an error in state: 38.
 ##
 ## seq -> MEASURE LPAREN nonempty_access_list . GT ID RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -406,7 +473,7 @@ program: MEASURE LPAREN ID RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
 ## In state 7, spurious reduction of production nonempty_access_list -> separated_nonempty_list(COMMA,access)
 ##
 
@@ -414,7 +481,7 @@ program: MEASURE LPAREN ID RPAREN
 
 program: MEASURE LPAREN ID GT THEN
 ##
-## Ends in an error in state: 34.
+## Ends in an error in state: 39.
 ##
 ## seq -> MEASURE LPAREN nonempty_access_list GT . ID RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -426,7 +493,7 @@ program: MEASURE LPAREN ID GT THEN
 
 program: MEASURE LPAREN ID GT ID THEN
 ##
-## Ends in an error in state: 35.
+## Ends in an error in state: 40.
 ##
 ## seq -> MEASURE LPAREN nonempty_access_list GT ID . RPAREN DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -438,7 +505,7 @@ program: MEASURE LPAREN ID GT ID THEN
 
 program: MEASURE LPAREN ID GT ID RPAREN THEN
 ##
-## Ends in an error in state: 36.
+## Ends in an error in state: 41.
 ##
 ## seq -> MEASURE LPAREN nonempty_access_list GT ID RPAREN . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -450,7 +517,7 @@ program: MEASURE LPAREN ID GT ID RPAREN THEN
 
 program: MEASURE LPAREN ID GT ID RPAREN DOT THEN
 ##
-## Ends in an error in state: 37.
+## Ends in an error in state: 42.
 ##
 ## seq -> MEASURE LPAREN nonempty_access_list GT ID RPAREN DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -462,7 +529,7 @@ program: MEASURE LPAREN ID GT ID RPAREN DOT THEN
 
 program: TAU DOT LPAREN THEN
 ##
-## Ends in an error in state: 38.
+## Ends in an error in state: 43.
 ##
 ## chan -> LPAREN . chan RPAREN [ QMARK BANG ]
 ## internal_choice -> LPAREN . internal_choice RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
@@ -477,7 +544,7 @@ program: TAU DOT LPAREN THEN
 
 program: TAU DOT LPAREN LPAREN THEN
 ##
-## Ends in an error in state: 39.
+## Ends in an error in state: 44.
 ##
 ## chan -> LPAREN . chan RPAREN [ RPAREN QMARK BANG ]
 ## internal_choice -> LPAREN . internal_choice RPAREN [ RPAREN PAR ]
@@ -491,7 +558,7 @@ program: TAU DOT LPAREN LPAREN THEN
 
 program: TAU DOT IF THEN
 ##
-## Ends in an error in state: 40.
+## Ends in an error in state: 45.
 ##
 ## internal_choice -> IF . expr THEN internal_par ELSE internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -503,7 +570,7 @@ program: TAU DOT IF THEN
 
 program: TAU DOT IF NOT THEN
 ##
-## Ends in an error in state: 41.
+## Ends in an error in state: 46.
 ##
 ## expr -> NOT . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -515,7 +582,7 @@ program: TAU DOT IF NOT THEN
 
 program: TAU DOT IF MINUS THEN
 ##
-## Ends in an error in state: 42.
+## Ends in an error in state: 47.
 ##
 ## expr -> MINUS . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -527,7 +594,7 @@ program: TAU DOT IF MINUS THEN
 
 program: TAU DOT IF LPAREN THEN
 ##
-## Ends in an error in state: 43.
+## Ends in an error in state: 48.
 ##
 ## expr -> LPAREN . expr RPAREN [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -539,7 +606,7 @@ program: TAU DOT IF LPAREN THEN
 
 program: TAU DOT IF LPAREN ID THEN
 ##
-## Ends in an error in state: 46.
+## Ends in an error in state: 51.
 ##
 ## expr -> LPAREN expr . RPAREN [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . PLUS expr [ RPAREN PLUS OR LT LEQ GT GEQ EQ AND ]
@@ -559,7 +626,7 @@ program: TAU DOT IF LPAREN ID THEN
 
 program: TAU DOT IF ID PLUS THEN
 ##
-## Ends in an error in state: 48.
+## Ends in an error in state: 53.
 ##
 ## expr -> expr PLUS . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -571,7 +638,7 @@ program: TAU DOT IF ID PLUS THEN
 
 program: TAU DOT IF ID PLUS ID TAU
 ##
-## Ends in an error in state: 49.
+## Ends in an error in state: 54.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr PLUS expr . [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -591,7 +658,7 @@ program: TAU DOT IF ID PLUS ID TAU
 
 program: TAU DOT IF ID OR THEN
 ##
-## Ends in an error in state: 50.
+## Ends in an error in state: 55.
 ##
 ## expr -> expr OR . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -603,7 +670,7 @@ program: TAU DOT IF ID OR THEN
 
 program: TAU DOT IF ID LT THEN
 ##
-## Ends in an error in state: 53.
+## Ends in an error in state: 58.
 ##
 ## expr -> expr LT . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -615,7 +682,7 @@ program: TAU DOT IF ID LT THEN
 
 program: TAU DOT IF ID LT ID TAU
 ##
-## Ends in an error in state: 54.
+## Ends in an error in state: 59.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -635,7 +702,7 @@ program: TAU DOT IF ID LT ID TAU
 
 program: TAU DOT IF ID LEQ THEN
 ##
-## Ends in an error in state: 55.
+## Ends in an error in state: 60.
 ##
 ## expr -> expr LEQ . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -647,7 +714,7 @@ program: TAU DOT IF ID LEQ THEN
 
 program: TAU DOT IF ID LEQ ID TAU
 ##
-## Ends in an error in state: 56.
+## Ends in an error in state: 61.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -667,7 +734,7 @@ program: TAU DOT IF ID LEQ ID TAU
 
 program: TAU DOT IF ID GT THEN
 ##
-## Ends in an error in state: 57.
+## Ends in an error in state: 62.
 ##
 ## expr -> expr GT . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -679,7 +746,7 @@ program: TAU DOT IF ID GT THEN
 
 program: TAU DOT IF ID GT ID TAU
 ##
-## Ends in an error in state: 58.
+## Ends in an error in state: 63.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -699,7 +766,7 @@ program: TAU DOT IF ID GT ID TAU
 
 program: TAU DOT IF ID GEQ THEN
 ##
-## Ends in an error in state: 59.
+## Ends in an error in state: 64.
 ##
 ## expr -> expr GEQ . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -711,7 +778,7 @@ program: TAU DOT IF ID GEQ THEN
 
 program: TAU DOT IF ID GEQ ID TAU
 ##
-## Ends in an error in state: 60.
+## Ends in an error in state: 65.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -731,7 +798,7 @@ program: TAU DOT IF ID GEQ ID TAU
 
 program: TAU DOT IF ID EQ THEN
 ##
-## Ends in an error in state: 61.
+## Ends in an error in state: 66.
 ##
 ## expr -> expr EQ . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -743,7 +810,7 @@ program: TAU DOT IF ID EQ THEN
 
 program: TAU DOT IF ID EQ ID TAU
 ##
-## Ends in an error in state: 62.
+## Ends in an error in state: 67.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -763,7 +830,7 @@ program: TAU DOT IF ID EQ ID TAU
 
 program: TAU DOT IF ID AND THEN
 ##
-## Ends in an error in state: 63.
+## Ends in an error in state: 68.
 ##
 ## expr -> expr AND . expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ##
@@ -775,7 +842,7 @@ program: TAU DOT IF ID AND THEN
 
 program: TAU DOT IF ID AND ID TAU
 ##
-## Ends in an error in state: 64.
+## Ends in an error in state: 69.
 ##
 ## expr -> expr . PLUS expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ THEN RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -795,7 +862,7 @@ program: TAU DOT IF ID AND ID TAU
 
 program: TAU DOT IF ID RPAREN
 ##
-## Ends in an error in state: 67.
+## Ends in an error in state: 72.
 ##
 ## expr -> expr . PLUS expr [ THEN PLUS OR LT LEQ GT GEQ EQ AND ]
 ## expr -> expr . AND expr [ THEN PLUS OR LT LEQ GT GEQ EQ AND ]
@@ -815,7 +882,7 @@ program: TAU DOT IF ID RPAREN
 
 program: TAU DOT IF ID THEN THEN
 ##
-## Ends in an error in state: 68.
+## Ends in an error in state: 73.
 ##
 ## internal_choice -> IF expr THEN . internal_par ELSE internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -827,7 +894,7 @@ program: TAU DOT IF ID THEN THEN
 
 program: ID THEN
 ##
-## Ends in an error in state: 69.
+## Ends in an error in state: 74.
 ##
 ## chan -> ID . COLON typ [ RPAREN QMARK COMMA BANG ]
 ##
@@ -839,7 +906,7 @@ program: ID THEN
 
 program: ID COLON THEN
 ##
-## Ends in an error in state: 70.
+## Ends in an error in state: 75.
 ##
 ## chan -> ID COLON . typ [ RPAREN QMARK COMMA BANG ]
 ##
@@ -851,7 +918,7 @@ program: ID COLON THEN
 
 program: DISCARD THEN
 ##
-## Ends in an error in state: 75.
+## Ends in an error in state: 80.
 ##
 ## seq -> DISCARD . LPAREN access_list RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -863,7 +930,7 @@ program: DISCARD THEN
 
 program: DISCARD LPAREN THEN
 ##
-## Ends in an error in state: 76.
+## Ends in an error in state: 81.
 ##
 ## seq -> DISCARD LPAREN . access_list RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -875,7 +942,7 @@ program: DISCARD LPAREN THEN
 
 program: DISCARD LPAREN ID GT
 ##
-## Ends in an error in state: 79.
+## Ends in an error in state: 84.
 ##
 ## seq -> DISCARD LPAREN access_list . RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -886,16 +953,16 @@ program: DISCARD LPAREN ID GT
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 81, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
-## In state 77, spurious reduction of production loption(separated_nonempty_list(COMMA,access)) -> separated_nonempty_list(COMMA,access)
-## In state 78, spurious reduction of production access_list -> loption(separated_nonempty_list(COMMA,access))
+## In state 86, spurious reduction of production separated_nonempty_list(COMMA,access) -> access
+## In state 82, spurious reduction of production loption(separated_nonempty_list(COMMA,access)) -> separated_nonempty_list(COMMA,access)
+## In state 83, spurious reduction of production access_list -> loption(separated_nonempty_list(COMMA,access))
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: DISCARD LPAREN ID THEN
 ##
-## Ends in an error in state: 81.
+## Ends in an error in state: 86.
 ##
 ## separated_nonempty_list(COMMA,access) -> access . [ RPAREN GT ]
 ## separated_nonempty_list(COMMA,access) -> access . COMMA separated_nonempty_list(COMMA,access) [ RPAREN GT ]
@@ -908,7 +975,7 @@ program: DISCARD LPAREN ID THEN
 
 program: DISCARD LPAREN ID COMMA THEN
 ##
-## Ends in an error in state: 82.
+## Ends in an error in state: 87.
 ##
 ## separated_nonempty_list(COMMA,access) -> access COMMA . separated_nonempty_list(COMMA,access) [ RPAREN GT ]
 ##
@@ -920,7 +987,7 @@ program: DISCARD LPAREN ID COMMA THEN
 
 program: TAU DOT IF ID THEN DISCARD LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 85.
+## Ends in an error in state: 90.
 ##
 ## internal_choice -> IF expr THEN internal_par . ELSE internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -932,7 +999,7 @@ program: TAU DOT IF ID THEN DISCARD LPAREN RPAREN THEN
 
 program: TAU DOT IF ID THEN DISCARD LPAREN RPAREN ELSE THEN
 ##
-## Ends in an error in state: 86.
+## Ends in an error in state: 91.
 ##
 ## internal_choice -> IF expr THEN internal_par ELSE . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -944,7 +1011,7 @@ program: TAU DOT IF ID THEN DISCARD LPAREN RPAREN ELSE THEN
 
 program: ID COLON BOOL_TYP THEN
 ##
-## Ends in an error in state: 89.
+## Ends in an error in state: 94.
 ##
 ## seq -> chan . QMARK ID DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ## seq -> chan . BANG expr [ RPAREN PAR ELSE CHOICE BACKSLASH ]
@@ -957,7 +1024,7 @@ program: ID COLON BOOL_TYP THEN
 
 program: ID COLON BOOL_TYP QMARK THEN
 ##
-## Ends in an error in state: 90.
+## Ends in an error in state: 95.
 ##
 ## seq -> chan QMARK . ID DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -969,7 +1036,7 @@ program: ID COLON BOOL_TYP QMARK THEN
 
 program: ID COLON BOOL_TYP QMARK ID THEN
 ##
-## Ends in an error in state: 91.
+## Ends in an error in state: 96.
 ##
 ## seq -> chan QMARK ID . DOT internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -981,7 +1048,7 @@ program: ID COLON BOOL_TYP QMARK ID THEN
 
 program: ID COLON BOOL_TYP QMARK ID DOT THEN
 ##
-## Ends in an error in state: 92.
+## Ends in an error in state: 97.
 ##
 ## seq -> chan QMARK ID DOT . internal_par [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -993,7 +1060,7 @@ program: ID COLON BOOL_TYP QMARK ID DOT THEN
 
 program: ID COLON BOOL_TYP BANG THEN
 ##
-## Ends in an error in state: 94.
+## Ends in an error in state: 99.
 ##
 ## seq -> chan BANG . expr [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -1005,7 +1072,7 @@ program: ID COLON BOOL_TYP BANG THEN
 
 program: ID COLON BOOL_TYP BANG ID THEN
 ##
-## Ends in an error in state: 95.
+## Ends in an error in state: 100.
 ##
 ## expr -> expr . PLUS expr [ RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
 ## expr -> expr . AND expr [ RPAREN PLUS PAR OR LT LEQ GT GEQ EQ ELSE CHOICE BACKSLASH AND ]
@@ -1025,7 +1092,7 @@ program: ID COLON BOOL_TYP BANG ID THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 96.
+## Ends in an error in state: 101.
 ##
 ## internal_choice -> seq . [ RPAREN PAR ]
 ## internal_choice -> LPAREN seq . CHOICE separated_nonempty_list(CHOICE,seq) RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
@@ -1038,7 +1105,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN CHOICE THEN
 ##
-## Ends in an error in state: 97.
+## Ends in an error in state: 102.
 ##
 ## internal_choice -> LPAREN seq CHOICE . separated_nonempty_list(CHOICE,seq) RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -1050,7 +1117,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN CHOICE THEN
 
 program: DISCARD LPAREN RPAREN CHOICE LPAREN THEN
 ##
-## Ends in an error in state: 98.
+## Ends in an error in state: 103.
 ##
 ## chan -> LPAREN . chan RPAREN [ RPAREN QMARK COMMA BANG ]
 ##
@@ -1062,7 +1129,7 @@ program: DISCARD LPAREN RPAREN CHOICE LPAREN THEN
 
 program: DISCARD LPAREN RPAREN CHOICE LPAREN ID COLON BOOL_TYP THEN
 ##
-## Ends in an error in state: 99.
+## Ends in an error in state: 104.
 ##
 ## chan -> LPAREN chan . RPAREN [ RPAREN QMARK COMMA BANG ]
 ##
@@ -1074,7 +1141,7 @@ program: DISCARD LPAREN RPAREN CHOICE LPAREN ID COLON BOOL_TYP THEN
 
 program: DISCARD LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 101.
+## Ends in an error in state: 106.
 ##
 ## separated_nonempty_list(CHOICE,seq) -> seq . [ RPAREN PAR BACKSLASH ]
 ## separated_nonempty_list(CHOICE,seq) -> seq . CHOICE separated_nonempty_list(CHOICE,seq) [ RPAREN PAR BACKSLASH ]
@@ -1087,7 +1154,7 @@ program: DISCARD LPAREN RPAREN THEN
 
 program: DISCARD LPAREN RPAREN CHOICE THEN
 ##
-## Ends in an error in state: 102.
+## Ends in an error in state: 107.
 ##
 ## separated_nonempty_list(CHOICE,seq) -> seq CHOICE . separated_nonempty_list(CHOICE,seq) [ RPAREN PAR BACKSLASH ]
 ##
@@ -1099,7 +1166,7 @@ program: DISCARD LPAREN RPAREN CHOICE THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN CHOICE DISCARD LPAREN RPAREN PAR
 ##
-## Ends in an error in state: 104.
+## Ends in an error in state: 109.
 ##
 ## internal_choice -> LPAREN seq CHOICE separated_nonempty_list(CHOICE,seq) . RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -1110,14 +1177,14 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN CHOICE DISCARD LPAREN RPAREN PAR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
+## In state 106, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: TAU DOT LPAREN LPAREN DISCARD LPAREN RPAREN PAR
 ##
-## Ends in an error in state: 106.
+## Ends in an error in state: 111.
 ##
 ## internal_choice -> LPAREN internal_choice . RPAREN [ RPAREN PAR ]
 ##
@@ -1128,14 +1195,14 @@ program: TAU DOT LPAREN LPAREN DISCARD LPAREN RPAREN PAR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 96, spurious reduction of production internal_choice -> seq
+## In state 101, spurious reduction of production internal_choice -> seq
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: LPAREN ID COLON BOOL_TYP THEN
 ##
-## Ends in an error in state: 108.
+## Ends in an error in state: 113.
 ##
 ## chan -> LPAREN chan . RPAREN [ RPAREN QMARK BANG ]
 ## seq -> chan . QMARK ID DOT internal_par [ RPAREN PAR CHOICE ]
@@ -1149,7 +1216,7 @@ program: LPAREN ID COLON BOOL_TYP THEN
 
 program: TAU DOT LPAREN LPAREN DISCARD LPAREN RPAREN RPAREN THEN
 ##
-## Ends in an error in state: 109.
+## Ends in an error in state: 114.
 ##
 ## internal_choice -> LPAREN internal_choice . RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ## internal_par -> LPAREN internal_choice . PAR separated_nonempty_list(PAR,internal_choice) RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
@@ -1162,7 +1229,7 @@ program: TAU DOT LPAREN LPAREN DISCARD LPAREN RPAREN RPAREN THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR THEN
 ##
-## Ends in an error in state: 110.
+## Ends in an error in state: 115.
 ##
 ## internal_par -> LPAREN internal_choice PAR . separated_nonempty_list(PAR,internal_choice) RPAREN [ RPAREN PAR ELSE CHOICE BACKSLASH ]
 ##
@@ -1174,7 +1241,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR DISCARD LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 113.
+## Ends in an error in state: 118.
 ##
 ## separated_nonempty_list(PAR,internal_choice) -> internal_choice . [ RPAREN ]
 ## separated_nonempty_list(PAR,internal_choice) -> internal_choice . PAR separated_nonempty_list(PAR,internal_choice) [ RPAREN ]
@@ -1187,7 +1254,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR DISCARD LPAREN RPAREN THEN
 
 program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR DISCARD LPAREN RPAREN PAR THEN
 ##
-## Ends in an error in state: 114.
+## Ends in an error in state: 119.
 ##
 ## separated_nonempty_list(PAR,internal_choice) -> internal_choice PAR . separated_nonempty_list(PAR,internal_choice) [ RPAREN ]
 ##
@@ -1199,7 +1266,7 @@ program: TAU DOT LPAREN DISCARD LPAREN RPAREN PAR DISCARD LPAREN RPAREN PAR THEN
 
 program: LPAREN THEN
 ##
-## Ends in an error in state: 123.
+## Ends in an error in state: 129.
 ##
 ## chan -> LPAREN . chan RPAREN [ RPAREN QMARK BANG ]
 ## external_choice -> LPAREN . external_choice RPAREN [ RPAREN PAR BACKSLASH ]
@@ -1212,7 +1279,7 @@ program: LPAREN THEN
 
 program: LPAREN DISCARD LPAREN RPAREN PAR
 ##
-## Ends in an error in state: 125.
+## Ends in an error in state: 131.
 ##
 ## external_choice -> LPAREN external_choice . RPAREN [ RPAREN PAR BACKSLASH ]
 ##
@@ -1223,15 +1290,15 @@ program: LPAREN DISCARD LPAREN RPAREN PAR
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
-## In state 124, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
+## In state 106, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
+## In state 130, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: DISCARD LPAREN RPAREN BACKSLASH THEN
 ##
-## Ends in an error in state: 130.
+## Ends in an error in state: 136.
 ##
 ## program -> external_par BACKSLASH . restr_list EOF [ # ]
 ##
@@ -1243,7 +1310,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN THEN
 ##
-## Ends in an error in state: 131.
+## Ends in an error in state: 137.
 ##
 ## restr_list -> LPAREN . loption(separated_nonempty_list(COMMA,chan)) RPAREN [ EOF ]
 ##
@@ -1255,7 +1322,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP THEN
 ##
-## Ends in an error in state: 135.
+## Ends in an error in state: 141.
 ##
 ## separated_nonempty_list(COMMA,chan) -> chan . [ RPAREN ]
 ## separated_nonempty_list(COMMA,chan) -> chan . COMMA separated_nonempty_list(COMMA,chan) [ RPAREN ]
@@ -1268,7 +1335,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP COMMA THEN
 ##
-## Ends in an error in state: 136.
+## Ends in an error in state: 142.
 ##
 ## separated_nonempty_list(COMMA,chan) -> chan COMMA . separated_nonempty_list(COMMA,chan) [ RPAREN ]
 ##
@@ -1280,7 +1347,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN ID COLON BOOL_TYP COMMA THEN
 
 program: DISCARD LPAREN RPAREN BACKSLASH LPAREN RPAREN THEN
 ##
-## Ends in an error in state: 138.
+## Ends in an error in state: 144.
 ##
 ## program -> external_par BACKSLASH restr_list . EOF [ # ]
 ##
@@ -1292,7 +1359,7 @@ program: DISCARD LPAREN RPAREN BACKSLASH LPAREN RPAREN THEN
 
 program: DISCARD LPAREN RPAREN RPAREN
 ##
-## Ends in an error in state: 140.
+## Ends in an error in state: 146.
 ##
 ## separated_nonempty_list(PAR,external_choice) -> external_choice . [ BACKSLASH ]
 ## separated_nonempty_list(PAR,external_choice) -> external_choice . PAR separated_nonempty_list(PAR,external_choice) [ BACKSLASH ]
@@ -1304,15 +1371,15 @@ program: DISCARD LPAREN RPAREN RPAREN
 ## This implies that, although the LR(1) items shown above provide an
 ## accurate view of the past (what has been recognized so far), they
 ## may provide an INCOMPLETE view of the future (what was expected next).
-## In state 101, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
-## In state 124, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
+## In state 106, spurious reduction of production separated_nonempty_list(CHOICE,seq) -> seq
+## In state 130, spurious reduction of production external_choice -> separated_nonempty_list(CHOICE,seq)
 ##
 
 <YOUR SYNTAX ERROR MESSAGE HERE>
 
 program: DISCARD LPAREN RPAREN PAR THEN
 ##
-## Ends in an error in state: 141.
+## Ends in an error in state: 147.
 ##
 ## separated_nonempty_list(PAR,external_choice) -> external_choice PAR . separated_nonempty_list(PAR,external_choice) [ BACKSLASH ]
 ##

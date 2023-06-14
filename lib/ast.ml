@@ -27,6 +27,7 @@ type qop =
   | X
   | I
   | Z
+  | Y
   | CX
 [@@deriving show]
 

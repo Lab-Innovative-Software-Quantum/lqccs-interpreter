@@ -11,9 +11,9 @@ end
 
 module SigmaSet = Set.Make (SigmaElement)
 
-let declare_chan env loc (Chan (cname, ctype)) =
+let declare_chan chantbl loc (Chan (cname, ctype)) =
   try
-    let c = Hashtbl.find env cname in
+    let c = Hashtbl.find chantbl cname in
     if c = ctype then () (* skip, if the channel was already defined *)
     else
       raise
@@ -22,7 +22,7 @@ let declare_chan env loc (Chan (cname, ctype)) =
              loc ))
   with Not_found ->
     (* create variable with vtype in env *)
-    Hashtbl.add env cname ctype
+    Hashtbl.add chantbl cname ctype
 
 let declare_var env (VarName var) loc vartype =
   match Hashtbl.find_opt env var with
@@ -53,13 +53,13 @@ let typecheck_access env access =
             raise
               (TypeException ("QBit index must be higher or equal to 1", loc)))
 
-let rec typecheck_expr env expr =
+let rec typecheck_expr chantbl env expr =
   match expr with
   | { node = nod; loc } -> (
       match nod with
       | BinaryOp (binop, expr1, expr2) ->
-          let typ1, _ = typecheck_expr env expr1 in
-          let typ2, _ = typecheck_expr env expr2 in
+          let typ1, _ = typecheck_expr chantbl env expr1 in
+          let typ2, _ = typecheck_expr chantbl env expr2 in
           (* auxiliary function to raise meaningful exception *)
           let fail_fun opname typ1 typ2 =
             raise
@@ -85,7 +85,7 @@ let rec typecheck_expr env expr =
             in
             (binoptyp, Option.None)
       | UnaryOp (uop, expr1) ->
-          let typ, _ = typecheck_expr env expr1 in
+          let typ, _ = typecheck_expr chantbl env expr1 in
           let uoptyp =
             match uop with
             | Not ->
@@ -102,11 +102,11 @@ let rec typecheck_expr env expr =
       | BLiteral _ -> (TBool, Option.None)
       | Access acc -> typecheck_access env acc)
 
-let typecheck_restr env restr =
+let typecheck_restr chantbl restr =
   match restr with
-  | { node = Restr clist; loc } -> List.iter (declare_chan env loc) clist
+  | { node = Restr clist; loc } -> List.iter (declare_chan chantbl loc) clist
 
-let rec typecheck_choice env seq_list loc =
+let rec typecheck_choice chantbl env seq_list loc =
   match seq_list with
   | [] ->
       raise
@@ -114,9 +114,9 @@ let rec typecheck_choice env seq_list loc =
            ("Non-deterministic choice needs at least 2 or more processes", loc))
   | head :: rest ->
       (* process first seq *)
-      let sigma_head = typecheck_seq env head in
+      let sigma_head = typecheck_seq chantbl env head in
       (* process all the other seq *)
-      let sigma_rest = List.map (typecheck_seq env) rest in
+      let sigma_rest = List.map (typecheck_seq chantbl env) rest in
       (* for each sigma from the rest of seqs, check they are equal to the first one.
           in practice we ensure that all the sigmas are equal *)
       List.iter
@@ -138,32 +138,34 @@ and check_par_intersection loc =
       if not (SigmaSet.is_empty inters) then
         raise
           (TypeException
-             ("Parallel processes cannot share quantum variables", loc));
+             ("Parallel processes cannot share variables", loc));
       SigmaSet.union set acc)
     SigmaSet.empty
 
-and typecheck_internal_choice env internal_choice =
+and typecheck_internal_choice chantbl env internal_choice =
   match internal_choice with
   | { node; loc } -> (
       match node with
-      | InternalChoice seq_list -> typecheck_choice env seq_list loc
+      | InternalChoice seq_list -> typecheck_choice chantbl env seq_list loc
       | IfThenElse (expr, inter_node_1, inter_node_2) ->
-          let guardtyp, _ = typecheck_expr env expr in
+          let guardtyp, _ = typecheck_expr chantbl env expr in
           if guardtyp <> TBool then
             raise (TypeException ("Only booleans are allowed as guard", loc));
-          let sigma_then = typecheck_internal_par env inter_node_1 in
-          let sigma_else = typecheck_internal_par env inter_node_2 in
+          let sigma_then = typecheck_internal_par chantbl env inter_node_1 in
+          let sigma_else = typecheck_internal_par chantbl env inter_node_2 in
           if not (SigmaSet.equal sigma_then sigma_else) then
             raise
               (TypeException
                  ("Branches of a conditional must share quantum variables", loc))
           else sigma_then)
 
-and typecheck_internal_par env internal_par =
+and typecheck_internal_par chantbl env internal_par =
   match internal_par with
   | { node = InternalPar internal_choice_list; loc } ->
       let sigma_list =
-        List.map (typecheck_internal_choice env) internal_choice_list
+        List.map (fun ch -> 
+          let env_copy = Hashtbl.copy env in typecheck_internal_choice chantbl env_copy ch
+        ) internal_choice_list
       in
       check_par_intersection loc sigma_list
 
@@ -193,11 +195,11 @@ and ensure_sent_or_discarded qlist sigma loc =
                      loc ))))
     qlist
 
-and typecheck_seq env seq =
+and typecheck_seq chantbl env seq =
   match seq with
   | { node = nod; loc } -> (
       match nod with
-      | Tau rest -> typecheck_internal_par env rest
+      | Tau rest -> typecheck_internal_par chantbl env rest
       | Measure (qnames, var, rest) ->
           let tobe_checked =
             List.fold_left
@@ -215,7 +217,7 @@ and typecheck_seq env seq =
              because the measurement returns an integer *)
           declare_var env var loc TInt;
           (* typecheck the rest of the program *)
-          let sigma_rest = typecheck_internal_par env rest in
+          let sigma_rest = typecheck_internal_par chantbl env rest in
           (* ensure every quantum variable or qbit on which the measurement
              operation is applied it is sent or discarded later in the program *)
           ensure_sent_or_discarded tobe_checked sigma_rest loc;
@@ -241,7 +243,7 @@ and typecheck_seq env seq =
           in
           let required_types =
             match qop with
-            | H | X | I | Z -> [ TQuant ]
+            | H | X | I | Z | Y -> [ TQuant ]
             | CX -> [ TQuant; TQuant ]
           in
           (* ensure the given types are the SAME of the required *)
@@ -262,26 +264,26 @@ and typecheck_seq env seq =
                    ("Quantum operation used with same quantum variables", loc))
           | _ -> ());
           (* typecheck the rest of the program *)
-          let sigma_rest = typecheck_internal_par env rest in
+          let sigma_rest = typecheck_internal_par chantbl env rest in
           (* ensure every quantum variable or qbit on which the quantum
              operation is applied it is sent or discarded later in the program *)
           ensure_sent_or_discarded tobe_checked sigma_rest loc;
           sigma_rest
       | Recv (Chan (cname, chantyp), var, rest) ->
-          declare_chan env loc (Chan (cname, chantyp));
+          declare_chan chantbl loc (Chan (cname, chantyp));
           (* declare variable var of the same type of the receiving channel *)
           declare_var env var loc chantyp;
           (* typecheck the rest of the program *)
-          let sigma_rest = typecheck_internal_par env rest in
+          let sigma_rest = typecheck_internal_par chantbl env rest in
           (* if receiving quantum variable of qbit, then ensure
              it is sent or discarded later in the program *)
           if chantyp = TQuant then
             ensure_sent_or_discarded [ AccessVar var ] sigma_rest loc;
           SigmaSet.remove (AccessVar var, true) sigma_rest
       | Send (Chan (cname, chantyp), exp) -> (
-          declare_chan env loc (Chan (cname, chantyp));
+          declare_chan chantbl loc (Chan (cname, chantyp));
           (* typecheck exp and check that its type is the channel's type *)
-          let exptyp, qb_opt = typecheck_expr env exp in
+          let exptyp, qb_opt = typecheck_expr chantbl env exp in
           if chantyp <> exptyp then
             raise
               (TypeException
@@ -305,28 +307,31 @@ and typecheck_seq env seq =
           in
           SigmaSet.of_list discardedlist)
 
-let typecheck_external_choice env external_choice =
+let typecheck_external_choice chantbl env external_choice =
   match external_choice with
-  | { node = ExternalChoice seq_list; loc } -> typecheck_choice env seq_list loc
+  | { node = ExternalChoice seq_list; loc } -> typecheck_choice chantbl env seq_list loc
 
-let typecheck_external_par env external_par =
+let typecheck_external_par chantbl env external_par =
   match external_par with
   | { node = ExternalPar external_choice_list; loc } ->
       let sigma_list =
-        List.map (typecheck_external_choice env) external_choice_list
+        List.map (fun ch -> 
+          let env_copy = Hashtbl.copy env in typecheck_external_choice chantbl env_copy ch
+        ) external_choice_list
       in
       check_par_intersection loc sigma_list
 
-let typecheck_program env prog =
+let typecheck_program chantbl env prog =
   match prog with
   | Prog (external_par, restr) ->
-      let global_sigmaset = typecheck_external_par env external_par in
-      typecheck_restr env restr;
+      typecheck_restr chantbl restr;
+      let global_sigmaset = typecheck_external_par chantbl env external_par in
       prog, global_sigmaset
 
 let typecheck (ast : program) =
   let env = Hashtbl.create 256 in
-  let ast, sigmaset = typecheck_program env ast in
+  let chantbl = Hashtbl.create 256 in
+  let ast, sigmaset = typecheck_program chantbl env ast in
   let qlist = SigmaSet.elements sigmaset in
   let maxq = List.fold_left (fun curr_max elem ->
     match elem with
