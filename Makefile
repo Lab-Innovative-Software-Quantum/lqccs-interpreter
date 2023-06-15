@@ -11,7 +11,6 @@ $(eval $(ARGS):;@:)
 .PHONY: deps
 deps: ## Install development dependencies
 	opam install -y dune ocamlformat utop ocaml-lsp-server
-	opam install --deps-only --with-test --with-doc -y .
 ifeq ($(UNAME), arm64)
 	brew install openblas
 	export LDFLAGS="-L/opt/homebrew/opt/openblas/lib"
@@ -22,6 +21,7 @@ ifeq ($(UNAME), arm64)
 else
 	opam install owl
 endif
+	opam install --deps-only --with-test --with-doc -y .
 
 .PHONY: build
 build: ## Build the project, including non installable libraries and executables
