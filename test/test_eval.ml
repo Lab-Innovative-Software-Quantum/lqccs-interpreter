@@ -176,7 +176,7 @@ let tests =
       [
         [([one]), "a:int!42", 1.0]
       ];
-    (* 22- error 1 from professors feedback ??? *)
+    (* 22- error 1 from professors feedback *)
     assertResult "a:int!0 ++ Discard() || Tau.b:int!1 \\ ()"
       [
         [([one], "Discard() || b:int!1", 1.0)];

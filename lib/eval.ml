@@ -4,7 +4,7 @@ open Typechecker
 open Qop
 open String_of
 
-let debug = false
+let debug = true
 
 exception EvalException of Location.code_pos * string
 
@@ -193,7 +193,117 @@ let prog_of_par ext_choices restr loc =
 let extpar_of_proc (Process (Memory (_, _), Conf (_, Prog (ext_par, _), _))) =
   ext_par
 
-let choices_to_processes external_choice_list
+let internal_par_to_external symtbl intpar =
+  let rec recurse acc intpar =
+    match intpar.node with
+    | InternalPar intchoices ->
+        List.fold_left
+          (fun acc2 intchoice ->
+            match intchoice.node with
+            | IfThenElse (guard, then_branch, else_branch) -> (
+                match eval_expr symtbl guard with
+                | Bool true -> recurse acc2 then_branch
+                | Bool false -> recurse acc2 else_branch
+                | _ -> raise (TypeException ("Invalid guard type", guard.loc)))
+            | InternalChoice seqlist ->
+                { node = ExternalChoice seqlist; loc = intchoice.loc } :: acc2)
+          acc intchoices
+  in
+  let extpar = ExternalPar (recurse [] intpar) in
+  { node = extpar; loc = intpar.loc }
+
+(* (A + B) || (C + D) || E || (F + G)
+    ^   
+    (recvB.dopoRecv + altro1) || sendB || (F + G) -> dopoRecv || (F + G) 
+*)
+let rec choices_to_processes res before_lis external_choice_list proc = 
+  let (Process
+  (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
+  match external_choice_list with
+  | [] -> res
+  (* Tau.Discard(q1) ++ Tau.Discard(q1) || Tau.Discard(q2) ++ Tau.Discard(q2) \ () *)
+  | { node = ExternalChoice(_::[]); _}::restofchoices -> 
+    choices_to_processes res ((List.hd external_choice_list)::before_lis) restofchoices proc
+  | { node = ExternalChoice(seqlis); loc }::restofchoices -> 
+    let new_choices = List.fold_left (fun acc seq ->
+      (match seq.node with
+      | Recv(Chan(recv_cname, _), vname, after_recv) -> 
+          let (new_choice_lis, found) = List.fold_left (fun (acc2, found) choice ->
+            if found then (choice::acc2, found) else
+            match choice.node with
+            | ExternalChoice(otherseqlis) ->
+              (* find a valid send *)
+              let send_opt = List.find_opt (fun otherseq ->
+                (match otherseq.node with
+                | Send(Chan(send_cname, _), _) when send_cname = recv_cname -> true
+                | _ -> false)
+              ) otherseqlis in
+              (* if a send is found, perform matching by computing the value to be received *)
+              (match send_opt with
+              | Some({ node = Send(_, expr); _ }) ->
+                let send_value = eval_expr symtbl expr in
+                (* add the value received to the symbol table *)
+                add_entry vname send_value symtbl |> ignore;
+                let { node = ExternalPar(choicelis); _ } = internal_par_to_external symtbl after_recv in
+                (* valid send found, do not keep this choice because data was sent *)
+                (List.append choicelis acc2, true)
+              | _ -> (* valid send not found, keep this choice *)
+                (choice::acc2, found))
+          ) ([], false) restofchoices
+        in
+        let new_choice_lis = if found then new_choice_lis 
+        else { node = ExternalChoice(seqlis); loc }::new_choice_lis in
+        let extbefore = List.append before_lis new_choice_lis in
+        extbefore::acc
+        (* (List.append extbefore restofchoices)::acc *)
+      | Send(Chan(send_cname, _), sendexpr) -> 
+        let (new_choice_lis, found) = List.fold_left (fun (acc2, found) choice ->
+          if found then (choice::acc2, found) else
+          match choice.node with
+          | ExternalChoice(otherseqlis) ->
+            (* find a valid recv *)
+            let recv_opt = List.find_opt (fun otherseq ->
+              (match otherseq.node with
+              | Recv(Chan(recv_cname, _), _, _) when recv_cname = send_cname -> true
+              | _ -> false)
+            ) otherseqlis in
+            (* if a recv is found, perform matching by computing the value to be received *)
+            (match recv_opt with
+              | Some({ node = Recv(_, vname, after_recv); _ }) ->
+                let send_value = eval_expr symtbl sendexpr in
+                (* add the value received to the symbol table 
+                a:int!0 ++ Discard() || Tau.b:int!1 \ ()
+                *)
+                add_entry vname send_value symtbl |> ignore;
+                let { node = ExternalPar(choicelis); _ } = internal_par_to_external symtbl after_recv in
+                (* valid send found, do not keep this choice because data was sent *)
+                (List.append choicelis acc2, true)
+              | _ -> (* valid recv not found, keep this choice *)
+                (choice::acc2, found))
+        ) ([], false) restofchoices
+        in
+        let new_choice_lis = if found then new_choice_lis 
+        else { node = ExternalChoice(seqlis); loc }::new_choice_lis in
+        let extbefore = List.append before_lis new_choice_lis in 
+        extbefore::acc
+        (* (List.append extbefore restofchoices)::acc *)
+      | Discard([]) -> acc (* ignore empty discards *)
+      (* | Discard(_) -> acc *)
+      | _ -> (* pick this element and create a new branch *)
+        let extbefore = List.append before_lis [{ node = ExternalChoice([seq]); loc }] in
+        (List.append extbefore restofchoices)::acc)
+    ) [] seqlis in
+    let new_distr_lis = List.map
+    (fun ext_choices ->
+      Process
+        ( Memory (symtbl, begin_block channels),
+          Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
+          new_choices in
+    let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
+    choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc
+  
+
+(*let choices_to_processes external_choice_list
     (Process
       (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) =
   (* build a list of external choice list. Example: transform
@@ -221,34 +331,18 @@ let choices_to_processes external_choice_list
        [extchoice(B); extchoice(C); extchoice(D)];
        [extchoice(B); extchoice(C); extchoice(E)];
      ]
+
   *)
   let cp = cart_prod [] choices_lis in
   (* transform each inner list into a distribution. Return a list of distributions *)
+  
   List.map
     (fun ext_choices ->
       Process
         ( Memory (symtbl, begin_block channels),
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
-    cp
-
-let internal_par_to_external symtbl intpar =
-  let rec recurse acc intpar =
-    match intpar.node with
-    | InternalPar intchoices ->
-        List.fold_left
-          (fun acc2 intchoice ->
-            match intchoice.node with
-            | IfThenElse (guard, then_branch, else_branch) -> (
-                match eval_expr symtbl guard with
-                | Bool true -> recurse acc2 then_branch
-                | Bool false -> recurse acc2 else_branch
-                | _ -> raise (TypeException ("Invalid guard type", guard.loc)))
-            | InternalChoice seqlist ->
-                { node = ExternalChoice seqlist; loc = intchoice.loc } :: acc2)
-          acc intchoices
-  in
-  let extpar = ExternalPar (recurse [] intpar) in
-  { node = extpar; loc = intpar.loc }
+    cp 
+*)
 
 let debug_distributions title distributions =
   if not debug then ()
@@ -400,7 +494,7 @@ let can_continue distributions =
           acc_distrib_list proclis)
     false distributions
 
-let rec eval_program distributions =
+let eval_program distributions =
   debug_distributions "BEFORE PREPROCESSING" distributions;
 
   let after_preprocessing =
@@ -411,7 +505,7 @@ let rec eval_program distributions =
             (fun proc ->
               match extpar_of_proc proc with
               | { node = ExternalPar external_choice_list; _ } ->
-                  choices_to_processes external_choice_list proc)
+                  choices_to_processes [] [] external_choice_list proc)
             proclist
         in
 
@@ -444,7 +538,7 @@ let rec eval_program distributions =
 
   debug_distributions "PERFORMED ONE STEP" after_one_step;
 
-  if can_continue after_one_step then eval_program after_one_step
+  if can_continue after_one_step then after_one_step
   else after_one_step
 
 let value_to_ast value loc =
