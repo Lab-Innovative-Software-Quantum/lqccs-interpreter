@@ -177,6 +177,18 @@ let tests =
       [
         [([one], "a:int!0 ++ Discard() || b:int!1", 1.0)];
       ];
+    (* 23- error from professors feedback *)
+    assertResult "(a:int!1 ++ a:int!2) || a:int?x.b:int!x \\ ()"
+      [
+        [([one], "b:int!1", 1.0)];
+        [([one], "b:int!2", 1.0)]
+      ];
+    (* 24- error from professors feedback *)
+    assertResult "a:int!1 || a:int?x.b:int!x ++ a:int?y.c:int!y \\ ()"
+      [
+        [([one], "b:int!1", 1.0)];
+        [([one], "c:int!1", 1.0)]
+      ];
   ]
 
   let _ =
