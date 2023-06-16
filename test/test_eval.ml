@@ -77,14 +77,12 @@ let tests =
     (* 4- Choice after measurement *)
     assertResult "(M(q1 > x).(Discard(q1) ++ c:quant!q1)) \\ ()"
       [
-        [([one; zero], "c:quant!q1", 1.0)];
-        [([one; zero], "Discard(q1)", 1.0)];
+        [([one; zero], "Discard(q1) ++ c:quant!q1", 1.0)];
       ];
     (* 5- Choice with send *)
     assertResult "(Discard(q1) ++ c:quant!q1) \\ ()"
       [
-        [([one; zero], "c:quant!q1", 1.0) ];
-        [([one; zero], "Discard(q1)", 1.0) ];
+        [([one; zero], "Discard(q1) ++ c:quant!q1", 1.0) ];
       ];
     (* 6- If after tau *)
     assertResult "Tau.if 0 = 0 then Discard() else c:int!5 \\ ()" [[([one], "Discard()", 1.0)]];
@@ -99,7 +97,6 @@ let tests =
     (* 8- Measure and choice with if *)
     assertResult "M(q1 > x).(Discard(q1) ++ Tau.if x = 0 then Tau.Discard(q1) else Discard(q1)) \\ ()"
       [
-        [([one; zero], "Discard(q1)", 1.0)];
         [([one; zero], "Discard(q1)", 1.0)];
       ];
     (* 9- Measure and parallel with if *)
@@ -166,9 +163,8 @@ let tests =
         [([one; zero], "Discard(q1)", 1.0)]
       ];
     (* 20- error 2 from professors feedback *)
-    assertResult "(c:quant!q1 ++ Discard(q1)) || c:quant?x.Discard(x) \\ ()"
+    assertResult "(c:quant!q1 ++ o:quant!q1) || c:quant?x.Discard(x) \\ ()"
       [
-        [([one; zero], "c:quant?x.Discard(x) || Discard(q1)", 1.0)];
         [([one; zero], "Discard(q1)", 1.0)]
       ];
     (* 21- error 4 from professors feedback *)
@@ -179,8 +175,7 @@ let tests =
     (* 22- error 1 from professors feedback *)
     assertResult "a:int!0 ++ Discard() || Tau.b:int!1 \\ ()"
       [
-        [([one], "Discard() || b:int!1", 1.0)];
-        [([one], "a:int!0 || b:int!1", 1.0)]
+        [([one], "a:int!0 ++ Discard() || b:int!1", 1.0)];
       ];
   ]
 

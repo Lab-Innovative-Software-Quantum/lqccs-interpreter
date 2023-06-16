@@ -4,7 +4,7 @@ open Typechecker
 open Qop
 open String_of
 
-let debug = true
+let debug = false
 
 exception EvalException of Location.code_pos * string
 
@@ -240,7 +240,7 @@ let rec choices_to_processes res before_lis external_choice_list proc =
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
         extbefore::new_choices_acc
-      | Discard([]) -> new_choices_acc (* ignore empty discards *)
+      | Discard _ -> new_choices_acc (* ignore discards *)
       | _ -> (* pick this element and create a new branch *)
         (match seqlis with
         | [] | _::[] -> new_choices_acc
@@ -256,7 +256,9 @@ let rec choices_to_processes res before_lis external_choice_list proc =
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
           new_choices_list in
     let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
+    if List.length seqlis > 1 then new_res else
     choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc
+    (* choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc *)
 
 let debug_distributions title distributions =
   if not debug then ()
@@ -275,7 +277,7 @@ let eval_process proc =
   let (Process (_, Conf (_, Prog (ext_par, restr), _))) = proc in
   let parallel_processes =
     match ext_par.node with
-    | ExternalPar external_choice_list -> List.rev external_choice_list
+    | ExternalPar external_choice_list -> external_choice_list
   in
   match parallel_processes with
   | [] ->
@@ -299,7 +301,7 @@ let eval_process proc =
                 let (Process (mem, Conf (qst, _, prob))) = parallel_proc in
                 let new_ext_par =
                   {
-                    node = ExternalPar (List.append [extchoice] rest);
+                    node = ExternalPar (List.append rest [extchoice]);
                     loc = ext_par.loc;
                   }
                 in
@@ -314,7 +316,7 @@ let eval_process proc =
                   match new_ext_par.node with
                   | ExternalPar new_ext_choices ->
                       let newextpar =
-                        ExternalPar (List.append new_ext_choices rest)
+                        ExternalPar (List.append rest new_ext_choices)
                       in
                       { node = newextpar; loc = new_ext_par.loc }
                 in
@@ -336,6 +338,42 @@ let rec pow a = function
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
 
+(* let shift (rundistr_list: running_distr list) = 
+  List.map (
+    fun el -> let RunDistr(proclist) = el in
+    RunDistr(List.map (
+      fun proc -> 
+        let Process(mem, Conf(qst, ast, prob)) = proc in
+        let new_ast = match ast with 
+        | Prog (extpar, restr) ->
+          (match extpar with
+          | { node = ExternalPar extchlist; loc = loc2} -> 
+            (* (A + B) || C || (D + E) -> (D + E) || C || (A + B) *)
+            let head = List.hd extchlist in
+            let tail = List.tl extchlist in
+            let newlist = List.append tail [head] in
+            Prog ({ node = ExternalPar (newlist); loc = loc2}, restr))
+        in
+        Process(mem, Conf(qst, new_ast, prob))
+    ) proclist)
+  ) rundistr_list *)
+
+let can_continue (rundistr_list: running_distr list) = 
+  List.exists (fun (RunDistr(proclist)) -> 
+    List.exists (fun (Process(_, Conf(_, ast, _))) -> 
+        match ast with 
+        | Prog ({ node = ExternalPar extchlist; _ }, _) ->
+          List.exists (fun choice ->
+            (match choice.node with
+            | ExternalChoice([]) -> false
+            | ExternalChoice(seq::[]) -> 
+              (match seq.node with
+              | Measure(_) | Tau(_) | QOp(_) -> true
+              | _ -> false)
+            | _ -> false)
+          ) extchlist
+    ) proclist
+  ) rundistr_list
 
 let rec eval_program distributions =
   debug_distributions "BEFORE PREPROCESSING" distributions;
@@ -383,10 +421,31 @@ let rec eval_program distributions =
   let after_one_step = List.rev after_one_step in
 
   debug_distributions "PERFORMED ONE STEP" after_one_step;
-  
-  if after_one_step = after_preprocessing
-  then after_one_step 
-  else eval_program after_one_step
+
+  let preproc_after_one_step = 
+    List.fold_left
+      (fun acc (RunDistr proclist) ->
+        let processes =
+          List.map
+            (fun proc ->
+              match extpar_of_proc proc with
+              | { node = ExternalPar external_choice_list; _ } ->
+                  choices_to_processes [] [] external_choice_list proc)
+            proclist
+        in
+
+        let cp = cart_prod [] processes in
+        let distrlis = List.map (fun proclis -> RunDistr proclis) cp in
+        List.append distrlis acc)
+      [] after_one_step
+  in
+
+  if preproc_after_one_step = [] then
+    if can_continue after_one_step 
+      then eval_program after_one_step
+      else after_one_step
+  else
+    eval_program preproc_after_one_step
 
 (* transforms the given value into the equivalent AST node *)
 let value_to_ast value loc =
