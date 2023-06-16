@@ -171,10 +171,6 @@ let internal_par_to_external symtbl intpar =
   let extpar = ExternalPar (recurse [] intpar) in
   { node = extpar; loc = intpar.loc }
 
-(* (A + B) || (C + D) || E || (F + G)
-    ^   
-    (recvB.dopoRecv + altro1) || sendB || (F + G) -> dopoRecv || (F + G) 
-*)
 let rec choices_to_processes res before_lis external_choice_list proc = 
   let (Process
   (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
@@ -258,7 +254,6 @@ let rec choices_to_processes res before_lis external_choice_list proc =
     let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
     if List.length seqlis > 1 then new_res else
     choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc
-    (* choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc *)
 
 let debug_distributions title distributions =
   if not debug then ()
@@ -337,26 +332,6 @@ let rec pow a = function
   | n ->
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
-
-(* let shift (rundistr_list: running_distr list) = 
-  List.map (
-    fun el -> let RunDistr(proclist) = el in
-    RunDistr(List.map (
-      fun proc -> 
-        let Process(mem, Conf(qst, ast, prob)) = proc in
-        let new_ast = match ast with 
-        | Prog (extpar, restr) ->
-          (match extpar with
-          | { node = ExternalPar extchlist; loc = loc2} -> 
-            (* (A + B) || C || (D + E) -> (D + E) || C || (A + B) *)
-            let head = List.hd extchlist in
-            let tail = List.tl extchlist in
-            let newlist = List.append tail [head] in
-            Prog ({ node = ExternalPar (newlist); loc = loc2}, restr))
-        in
-        Process(mem, Conf(qst, new_ast, prob))
-    ) proclist)
-  ) rundistr_list *)
 
 let can_continue (rundistr_list: running_distr list) = 
   List.exists (fun (RunDistr(proclist)) -> 
