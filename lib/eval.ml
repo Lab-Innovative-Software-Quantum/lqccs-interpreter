@@ -16,7 +16,6 @@ type value = Int of int | Bool of bool | QBit of int
 type memory = Memory of value Symbol_table.t * (value * bool) Symbol_table.t
 type process = Process of memory * conf
 type running_distr = RunDistr of process list
-type proc_state = CanAdvance of internal_par | Waiting
 
 let pretty_string_of_float number =
   let string_number = string_of_float number in
@@ -95,7 +94,7 @@ let eval_seq seq proc =
   match seq with
   | { node = nod; _ } -> (
       match nod with
-      | Tau rest -> [(proc, CanAdvance rest)]
+      | Tau rest -> [(proc, Some rest)]
       | Measure (acclist, VarName vname, rest) ->
           (* get the list of qbits *)
           let q_indexes = get_qindexes acclist symtbl in
@@ -114,7 +113,7 @@ let eval_seq seq proc =
               add_entry (VarName vname) (Int res) new_symtbl |> ignore;
               (* return the new quantum state, the rest of the program,
                   the new probability and the new symbol table *)
-              (Process(Memory(new_symtbl, new_channels), Conf(new_qst, prg, prob *. m_prob)), CanAdvance rest)::acc
+              (Process(Memory(new_symtbl, new_channels), Conf(new_qst, prg, prob *. m_prob)), Some rest)::acc
           ) [] res_list
       | QOp (op, acclist, rest) ->
           (* get the list of qbits *)
@@ -131,50 +130,9 @@ let eval_seq seq proc =
                 let sndqbit = List.hd (List.tl q_indexes) in
                 qop_cx qst firstqbit sndqbit
           in
-          [(Process(Memory(symtbl, channels), Conf(new_qst, prg, prob)), CanAdvance rest)]
-      (* | Recv (Chan (cname, _), vname, rest) -> (
-          (* check if the channel has a pending value *)
-          match lookup (VarName cname) channels with
-          | None ->
-              (* nobody sent anything on the channel *)
-              [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Waiting)]
-          | Some (_, true) ->
-              (* another process already received the pending value *)
-              [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Waiting)]
-          | Some (v, false) ->
-              (* replace the pending value with it and true *)
-              remove_entry (VarName cname) channels |> ignore;
-              add_entry (VarName cname) (v, true) channels |> ignore;
-              (* add the value received to the symbol table *)
-              add_entry vname v symtbl |> ignore;
-              [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), CanAdvance rest)])
-      | Send (Chan (cname, _), expr) -> (
-          (* check if the channel has a pending value *)
-          match lookup (VarName cname) channels with
-          | Some (v, true) ->
-              (* if the channel has a pending value, who was received *)
-              let this_v = eval_expr symtbl expr in
-              if v = this_v then
-                let _ = remove_entry (VarName cname) channels in
-                (* there isn't nothing else (None) and this process is ended (true) *)
-                [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Ended)]
-              else
-                [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Waiting)]
-          | Some (_, false) ->
-              (* if the channel has a pending value, who was NOT received *)
-              [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Waiting)]
-          | None ->
-              (* if the channel has NOT a pending value *)
-              (* eval expr to obtain the value *)
-              let v = eval_expr symtbl expr in
-              (* add a pending value on the channel *)
-              add_entry (VarName cname) (v, false) channels |> ignore;
-              (* return that this process is completed but waiting *)
-              [(Process(Memory(symtbl, channels), Conf(qst, prg, prob)), Waiting)]
-              (* return None such that the caller knows this process has ended *)
-          ) *)
+          [(Process(Memory(symtbl, channels), Conf(new_qst, prg, prob)), Some rest)]
       | _ ->
-        [(proc, Waiting)])
+        [(proc, None)])
 
 let rec cart_prod currlis lists =
   match lists with
@@ -222,9 +180,6 @@ let rec choices_to_processes res before_lis external_choice_list proc =
   (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
   match external_choice_list with
   | [] -> res
-  (* Tau.Discard(q1) ++ Tau.Discard(q1) || Tau.Discard(q2) ++ Tau.Discard(q2) \ () *)
-  (* | { node = ExternalChoice(_::[]); _}::restofchoices -> 
-    choices_to_processes res ((List.hd external_choice_list)::before_lis) restofchoices proc  *)
   | { node = ExternalChoice(seqlis); loc }::restofchoices -> 
     (* for each seq into seqlis *)
     let new_choices_list = List.fold_left (fun new_choices_acc seq ->
@@ -257,10 +212,6 @@ let rec choices_to_processes res before_lis external_choice_list proc =
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
         extbefore::new_choices_acc
-        (* (List.append extbefore restofchoices)::acc 
-        (c:int!10 ++ a:int!30) || c:int?x.Discard(q1) || a:int?x.o:int!x \ ()   
-        (c:int!10 ++ a:int!30) || c:int?x.Discard(q1) || (o:int!50 ++ Tau.Discard()) \ ()   
-        *)
       (* if the current seq is a send, find a valid recv *)
       | Send(Chan(send_cname, _), sendexpr) -> 
         let (new_choice_lis, found) = List.fold_left (fun (acc2, found) choice ->
@@ -289,9 +240,7 @@ let rec choices_to_processes res before_lis external_choice_list proc =
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
         extbefore::new_choices_acc
-        (* (List.append extbefore restofchoices)::acc *)
       | Discard([]) -> new_choices_acc (* ignore empty discards *)
-      (* | Discard(_) -> new_choices_acc *)
       | _ -> (* pick this element and create a new branch *)
         (match seqlis with
         | [] | _::[] -> new_choices_acc
@@ -340,34 +289,24 @@ let eval_process proc =
               (EvalException (extchoice.loc, "Unexpected empty external choice"))
         | ExternalChoice [ seq ] ->
             eval_seq seq proc
-        | _ -> [(proc, Waiting)]
+        | _ -> [(proc, None)]
       in
       let reslis =
         List.fold_left
           (fun acc (parallel_proc, proc_state) ->
             match proc_state with
-            (* | Ended ->
-                if rest = [] then acc
-                else
-                  let new_ext_par =
-                    { node = ExternalPar rest; loc = ext_par.loc }
-                  in
-                  let new_prog = Prog (new_ext_par, restr) in
-                  Process (mem, Conf (qst, new_prog, prob)) :: acc *)
-            | Waiting ->
+            | None ->
                 let (Process (mem, Conf (qst, _, prob))) = parallel_proc in
                 let new_ext_par =
                   {
-                    node = ExternalPar (List.append rest [ extchoice ]);
+                    node = ExternalPar (List.append [extchoice] rest);
                     loc = ext_par.loc;
                   }
                 in
                 Process (mem, Conf (qst, Prog (new_ext_par, restr), prob))
                 :: acc
-            | CanAdvance intpar ->
-                let (Process
-                      (Memory (symtbl, channels), Conf (new_qst, _, new_prob)))
-                    =
+            | Some intpar ->
+                let (Process(Memory (symtbl, channels), Conf (new_qst, _, new_prob))) =
                   parallel_proc
                 in
                 let new_ext_par = internal_par_to_external symtbl intpar in
@@ -375,7 +314,7 @@ let eval_process proc =
                   match new_ext_par.node with
                   | ExternalPar new_ext_choices ->
                       let newextpar =
-                        ExternalPar (List.append rest new_ext_choices)
+                        ExternalPar (List.append new_ext_choices rest)
                       in
                       { node = newextpar; loc = new_ext_par.loc }
                 in
@@ -396,6 +335,7 @@ let rec pow a = function
   | n ->
       let b = pow a (n / 2) in
       b * b * if n mod 2 = 0 then 1 else a
+
 
 let rec eval_program distributions =
   debug_distributions "BEFORE PREPROCESSING" distributions;
@@ -419,9 +359,10 @@ let rec eval_program distributions =
   in
   let after_preprocessing = List.rev after_preprocessing in
   
+  let after_preprocessing = if after_preprocessing = [] 
+  then distributions else after_preprocessing in
+
   debug_distributions "APPLIED PREPROCESSING" after_preprocessing;
-  
-  if after_preprocessing = [] then distributions else (
 
   let after_one_step =
     List.fold_left
@@ -443,8 +384,9 @@ let rec eval_program distributions =
 
   debug_distributions "PERFORMED ONE STEP" after_one_step;
   
-  eval_program after_one_step
-  )
+  if after_one_step = after_preprocessing
+  then after_one_step 
+  else eval_program after_one_step
 
 (* transforms the given value into the equivalent AST node *)
 let value_to_ast value loc =
