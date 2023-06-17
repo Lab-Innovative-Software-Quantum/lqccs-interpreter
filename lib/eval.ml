@@ -171,6 +171,16 @@ let internal_par_to_external symtbl intpar =
   let extpar = ExternalPar (recurse [] intpar) in
   { node = extpar; loc = intpar.loc }
 
+let rec extract_element_opt lis predicate =
+  match lis with
+  | [] -> None, []
+  | hd :: tail ->
+    if predicate hd then
+      (Some hd, tail)
+    else
+      let opt, rec_tail = extract_element_opt tail predicate in
+      (opt, hd :: rec_tail)
+
 let rec choices_to_processes res before_lis external_choice_list proc = 
   let (Process
   (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
@@ -182,8 +192,8 @@ let rec choices_to_processes res before_lis external_choice_list proc =
       (match seq.node with
       (* if the current seq is a recv, find a valid send *)
       | Recv(Chan(recv_cname, _), vname, after_recv) -> 
-          let (new_choice_lis, found) = List.fold_left (fun (acc2, found) choice ->
-            if found then (choice::acc2, found) else
+          let (new_choice_lis, found, recv_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
+            if found then (choice::acc2, found, acc_symtbl) else
             match choice.node with
             | ExternalChoice(otherseqlis) ->
               (* find a valid send *)
@@ -197,21 +207,22 @@ let rec choices_to_processes res before_lis external_choice_list proc =
               | Some({ node = Send(_, expr); _ }) ->
                 let send_value = eval_expr symtbl expr in
                 (* add the value received to the symbol table *)
-                add_entry vname send_value symtbl |> ignore;
-                let { node = ExternalPar(choicelis); _ } = internal_par_to_external symtbl after_recv in
+                let new_symtbl = begin_block symtbl in
+                add_entry vname send_value new_symtbl |> ignore;
+                let { node = ExternalPar(choicelis); _ } = internal_par_to_external new_symtbl after_recv in
                 (* valid send found, do not keep this choice because data was sent *)
-                (List.append choicelis acc2, true)
+                (List.append choicelis acc2, true, new_symtbl)
               | _ -> (* valid send not found, keep this choice *)
-                (choice::acc2, found))
-          ) ([], false) restofchoices
+                (choice::acc2, found, symtbl))
+          ) ([], false, symtbl) restofchoices
         in
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
-        extbefore::new_choices_acc
+        (extbefore, recv_symtbl)::new_choices_acc
       (* if the current seq is a send, find a valid recv *)
       | Send(Chan(send_cname, _), sendexpr) -> 
-        let (new_choice_lis, found) = List.fold_left (fun (acc2, found) choice ->
-          if found then (choice::acc2, found) else
+        let (new_choice_lis, found, send_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
+          if found then (choice::acc2, found, acc_symtbl) else
           match choice.node with
           | ExternalChoice(otherseqlis) ->
             (* find a valid recv *)
@@ -225,30 +236,31 @@ let rec choices_to_processes res before_lis external_choice_list proc =
               | Some({ node = Recv(_, vname, after_recv); _ }) ->
                 let send_value = eval_expr symtbl sendexpr in
                 (* add the value received to the symbol table *)
-                add_entry vname send_value symtbl |> ignore;
-                let { node = ExternalPar(choicelis); _ } = internal_par_to_external symtbl after_recv in
+                let new_symtbl = begin_block symtbl in
+                add_entry vname send_value new_symtbl |> ignore;
+                let { node = ExternalPar(choicelis); _ } = internal_par_to_external new_symtbl after_recv in
                 (* valid send found, do not keep this choice because data was sent *)
-                (List.append choicelis acc2, true)
+                (List.append choicelis acc2, true, new_symtbl)
               | _ -> (* valid recv not found, keep this choice *)
-                (choice::acc2, found))
-        ) ([], false) restofchoices
+                (choice::acc2, found, symtbl))
+        ) ([], false, symtbl) restofchoices
         in
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
-        extbefore::new_choices_acc
+        (extbefore, send_symtbl)::new_choices_acc
       | Discard _ -> new_choices_acc (* ignore discards *)
       | _ -> (* pick this element and create a new branch *)
         (match seqlis with
         | [] | _::[] -> new_choices_acc
         | _ ->
           let extbefore = List.append before_lis [{ node = ExternalChoice([seq]); loc }] in
-          (List.append extbefore restofchoices)::new_choices_acc))
+          ((List.append extbefore restofchoices), symtbl)::new_choices_acc))
     ) [] seqlis in
     (* transforms inner list from new_choices_list into processes *)
     let new_distr_lis = List.map
-    (fun ext_choices ->
+    (fun (ext_choices, this_symtbl) ->
       Process
-        ( Memory (symtbl, begin_block channels),
+        ( Memory (this_symtbl, begin_block channels),
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
           new_choices_list in
     let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
@@ -350,26 +362,37 @@ let can_continue (rundistr_list: running_distr list) =
     ) proclist
   ) rundistr_list
 
-let rec eval_program distributions =
-  debug_distributions "BEFORE PREPROCESSING" distributions;
-
-  let after_preprocessing =
-    List.fold_left
+let preprocess distrlis =
+  List.fold_left
       (fun acc (RunDistr proclist) ->
         let processes =
           List.map
             (fun proc ->
               match extpar_of_proc proc with
               | { node = ExternalPar external_choice_list; _ } ->
-                  choices_to_processes [] [] external_choice_list proc)
+                  let opt, rest = extract_element_opt external_choice_list (fun el -> 
+                    (match el.node with
+                    | ExternalChoice([]) -> false
+                    | ExternalChoice(_::[]) -> false
+                    | _ -> true)
+                  ) in
+                  let new_lis = (match opt with
+                  | Some (el) -> el::rest
+                  | None -> external_choice_list) 
+                  in
+                  choices_to_processes [] [] new_lis proc)
             proclist
         in
 
         let cp = cart_prod [] processes in
         let distrlis = List.map (fun proclis -> RunDistr proclis) cp in
         List.append distrlis acc)
-      [] distributions
-  in
+      [] distrlis 
+
+let rec eval_program distributions =
+  debug_distributions "BEFORE PREPROCESSING" distributions;
+
+  let after_preprocessing = preprocess distributions in
   let after_preprocessing = List.rev after_preprocessing in
   
   let after_preprocessing = if after_preprocessing = [] 
@@ -397,23 +420,7 @@ let rec eval_program distributions =
 
   debug_distributions "PERFORMED ONE STEP" after_one_step;
 
-  let preproc_after_one_step = 
-    List.fold_left
-      (fun acc (RunDistr proclist) ->
-        let processes =
-          List.map
-            (fun proc ->
-              match extpar_of_proc proc with
-              | { node = ExternalPar external_choice_list; _ } ->
-                  choices_to_processes [] [] external_choice_list proc)
-            proclist
-        in
-
-        let cp = cart_prod [] processes in
-        let distrlis = List.map (fun proclis -> RunDistr proclis) cp in
-        List.append distrlis acc)
-      [] after_one_step
-  in
+  let preproc_after_one_step = preprocess after_one_step in
 
   if preproc_after_one_step = [] then
     if can_continue after_one_step 
