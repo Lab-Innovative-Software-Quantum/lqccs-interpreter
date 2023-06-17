@@ -61,36 +61,49 @@ let rec cart_prod currlis lists =
   [] (List.rev first_list)
 
 (** TODO *)
-let generate_cases q_state_len to_measure =
-  let ops_list = List.init q_state_len (fun ind -> if List.mem (ind + 1) to_measure then [0; 1] else [-1]) in
+let generate_cases (q_state_len : int) (to_measure : int list) =
+  let ops_list = List.init q_state_len (fun ind ->
+    let rec get_index v lst curr =
+      match lst with 
+      | [] -> -1
+      | x::xs -> if v = x then curr else get_index v xs (curr + 1)
+    in
+    (* Get the position of each qbit in the order they were passed to the measurement function *)
+    let rank = get_index (ind + 1) to_measure 0 in 
+    if rank != -1 then
+      (* We are supposed to measure this qbit *)
+      [(rank, 0); (rank, 1)]
+    else 
+      (* We are not supposed to measure this qbit *)
+      [(rank, -1)]) 
+  in
   cart_prod [] ops_list
 
-(** Return the appropriate matrix based on the requested operation i, where
+(** Return the appropriate matrix based on the requested operation i,
       0: M0
       1: M1
-      -1: ID    
-*)
+     -1: ID *)
 let select_measurement_mat i =
-  let id = make_id in
-  (* Measurement matrices *)
-  let m0 = Mat.empty 2 2 in
-    Mat.set m0 0 0 {re = 1.0; im = 0.0}; Mat.set m0 0 1 {re = 0.0; im = 0.0};
-    Mat.set m0 1 0 {re = 0.0; im = 0.0}; Mat.set m0 1 1 {re = 0.0; im = 0.0};
-  let m1 = Mat.empty 2 2 in
-    Mat.set m1 0 0 {re = 0.0; im = 0.0}; Mat.set m1 0 1 {re = 0.0; im = 0.0};
-    Mat.set m1 1 0 {re = 0.0; im = 0.0}; Mat.set m1 1 1 {re = 1.0; im = 0.0};
-
-  match i with
-  | 0 -> m0
-  | 1 -> m1
-  | _ -> id
+  if i = -1 then make_id
+  else if i = 0 then 
+    let m0 = Mat.empty 2 2 in
+      Mat.set m0 0 0 {re = 1.0; im = 0.0}; Mat.set m0 0 1 {re = 0.0; im = 0.0};
+      Mat.set m0 1 0 {re = 0.0; im = 0.0}; Mat.set m0 1 1 {re = 0.0; im = 0.0};
+      m0
+  else if i = 1 then
+    let m1 = Mat.empty 2 2 in
+      Mat.set m1 0 0 {re = 0.0; im = 0.0}; Mat.set m1 0 1 {re = 0.0; im = 0.0};
+      Mat.set m1 1 0 {re = 0.0; im = 0.0}; Mat.set m1 1 1 {re = 1.0; im = 0.0};
+      m1
+  else
+    failwith "The value of 'i' must be -1, 0 or 1."
 
 (** Returns the result of applying the specified measurement.
     ops is expected to be a list of numbers of the following type:
       0: measure with M0
       1: measure with M1
       -1: apply id *)
-let apply_measurement q_state_vec ops =
+let apply_measurement (q_state_vec : Mat.mat) (ops : (int * int) list) =
   (* Auxiliary function to perform tensor products *)
   let rec create_matrix lst acc =
     match lst with 
@@ -101,8 +114,8 @@ let apply_measurement q_state_vec ops =
   in
     match ops with
     | [] -> raise (QuantumException "Nothing to measure")
-    | hd::rest -> let initial_mat = select_measurement_mat hd in 
-      let complete_mat = create_matrix rest initial_mat in
+    | (_, op_id)::rest -> let initial_mat = select_measurement_mat op_id in 
+      let complete_mat = create_matrix (List.map snd rest) initial_mat in
       let meas_mat = Mat.dot (Mat.transpose complete_mat) complete_mat in
       let prob = Mat.get (Mat.dot (Mat.dot (Mat.transpose q_state_vec) meas_mat) q_state_vec) 0 0 in
       let new_state = if prob == {re = 0.0; im = 0.0} then 
@@ -110,7 +123,12 @@ let apply_measurement q_state_vec ops =
         else
           let _ = mat_debug meas_mat in
           Mat.dot (Mat.mul_scalar meas_mat (sqrt prob)) q_state_vec in
-      let v = List.filter (fun op -> (op == 0) || op == 1) ops in
+      (* Extract the bits *)
+      let v = List.filter (fun (_, op) -> (op = 0) || op = 1) ops
+      (* Sort them to reflect the order in which qbits were passed to measure *)
+        |> List.sort (fun (rankA, _) (rankB, _)-> Stdlib.compare rankA rankB) 
+      (* Drop the rank associated with each bit *)
+        |> List.map snd in
       mat_debug new_state;
       {quantum_state = new_state |> vec2list |> normalize; value = v; probability = prob.re |> round2} 
 
@@ -122,9 +140,9 @@ let binary_to_decimal binary =
       let decimal_value = bit * int_of_float (2. ** float_of_int power) in
       binary_to_decimal_helper rest (power - 1) (acc + decimal_value)
   in
-  binary_to_decimal_helper (List.rev binary) (List.length binary - 1) 0
+  binary_to_decimal_helper binary (List.length binary - 1) 0
 
-(** Returns the list of all the possible outcomes obtainable from the measurement of the provided list of qbits *)
+(** Returns the list of all the possible outcomes obtainable from the measurement of the provided list of qbits *) 
 let measure (q_state : t list) (qbits : int list) : (t list * int * float) list =
   let state_length = float_of_int (List.length q_state) |> Float.log2 |> Float.floor |> int_of_float in
   let q_state_vec = list2vec q_state in
@@ -134,7 +152,7 @@ let measure (q_state : t list) (qbits : int list) : (t list * int * float) list 
     (quantum_state, (binary_to_decimal value), probability)
   ) cases in
   List.filter (fun el -> match el with 
-    | (_, _, prob) when prob = 0.0 -> false
+    | (_, _, prob) when prob = 0.0 -> false 
     | _ -> true
   ) results
 
