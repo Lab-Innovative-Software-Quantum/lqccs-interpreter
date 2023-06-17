@@ -140,21 +140,21 @@ let tests =
     (* 16- TELEPORTATION (simplified) *)
     assertResult "(CX(q1,q2).H(q1).M(q1,q2 > n).(m:int!n || Discard(q1,q2))) || (m:int?n2.c:int!n2) \\ (m:int)"
       [
-        [([zero; zero; one; zero], "Discard(q1, q2) || c:int!1", 0.5);
+        [([zero; zero; one; zero], "Discard(q1, q2) || c:int!2", 0.5);
          ([one; zero; zero; zero], "Discard(q1, q2) || c:int!0", 0.5)]
       ];
     (* 17- TELEPORTATION (in the paper) *)
     assertResult "(CX(q1,q2).H(q1).M(q1,q2 > n).(m:int!n || Discard(q1,q2))) || (m:int?n2.(if n2 = 0 then (I(q3).o:quant!q3) else (if n2 = 1 then (X(q3).o:quant!q3) else (if n2 = 2 then (Z(q3).o:quant!q3) else (Z(q3).X(q3).o:quant!q3))))) \\ (m:int)"
       [
-        [([zero; zero; zero; zero; zero; one; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.5);
+        [([zero; zero; zero; zero; one; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.5);
          ([one; zero; zero; zero; zero; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.5)]
       ];
     (* 18- TELEPORTATION (with entanglement) *)
     assertResult "H(q2).CX(q2,q3).((CX(q1,q2).H(q1).M(q1,q2 > n).(m:int!n || Discard(q1,q2))) || (m:int?n2.(if n2 = 0 then (I(q3).o:quant!q3) else (if n2 = 1 then (X(q3).o:quant!q3) else (if n2 = 2 then (Z(q3).o:quant!q3) else (Z(q3).X(q3).o:quant!q3)))))) \\ (m:int)"
       [
         [([zero; zero; zero; zero; zero; zero; minus_one; zero], "Discard(q1, q2) || o:quant!q3", 0.25);
-         ([zero; zero; zero; zero; zero; one; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.25);
-         ([zero; zero; zero; minus_one; zero; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.25);
+         ([zero; zero; zero; zero; one; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.25);
+         ([zero; zero; one; zero; zero; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.25);
          ([one; zero; zero; zero; zero; zero; zero; zero], "Discard(q1, q2) || o:quant!q3", 0.25)]
       ];
     (* 19- Send qbit and discard variable *)

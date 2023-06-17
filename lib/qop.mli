@@ -17,7 +17,7 @@ val step_forwards : Mat.mat -> int -> Mat.mat
 
 val step_backwards : Mat.mat -> int -> Mat.mat
 
-val generate_cases : int -> int list -> int list list
+val generate_cases : int -> int list -> (int * int) list list
 
 (* Quantum operations *)
 val qop_h : t list -> int -> t list
