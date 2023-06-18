@@ -203,7 +203,6 @@ let find_valid_send_lis recv_cname vname after_recv symtbl otherchoices =
   find_valid_matches send_finder (fun (send_found, others) ->
     (match send_found.node with
     | ExternalChoice({ node = Send(_, expr); _ }::[]) ->
-      Printf.printf "SEND FOUND\n";
       let send_value = eval_expr symtbl expr in
       (* add the value received to the symbol table *)
       let new_symtbl = begin_block symtbl in
@@ -224,7 +223,6 @@ let find_valid_recv_lis send_cname sendexpr symtbl otherchoices =
   find_valid_matches recv_finder (fun (recv_found, others) ->
     (match recv_found.node with
     | ExternalChoice({ node = Recv(_, vname, after_recv); _ }::[]) ->
-      Printf.printf "RECV FOUND: chan %s\n" send_cname;
       let send_value = eval_expr symtbl sendexpr in
       (* add the value received to the symbol table *)
       let new_symtbl = begin_block symtbl in
@@ -252,8 +250,6 @@ let choices_to_processes res before_lis external_choice_list proc =
             let extbefore = List.append before_lis choiceslis in
             (extbefore, new_symtbl)::thisacc
           ) new_choices_acc matches in
-
-          Printf.printf "END ---\n";
 
           tmp
           (* let ((new_choice_lis, recv_symtbl), found) = List.fold_left (fun ((acc2, _), found) choice ->
@@ -289,8 +285,6 @@ let choices_to_processes res before_lis external_choice_list proc =
             let extbefore = List.append before_lis choiceslis in
             (extbefore, new_symtbl)::thisacc
           ) new_choices_acc matches in
-
-          Printf.printf "END ---\n";
 
           tmp
         (* let (new_choice_lis, found, send_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
