@@ -189,6 +189,26 @@ let tests =
         [([one], "b:int!1", 1.0)];
         [([one], "c:int!1", 1.0)]
       ];
+    (* 25- deadlock in nondeterministic choice *)
+    assertResult "a:int!1 || (a:int?x.Discard() ++ b:bool?y.Discard()) || (b:bool?b1.Discard() ++ b:bool?b2.Discard())  \\ ()"
+      [
+        [([one], "b:bool?b1.Discard() ++ b:bool?b2.Discard() || Discard()", 1.0)]
+      ];
+    (* 26- parallelism with a single nondeterminism*)  
+    assertResult "b:bool!false || b:bool!true || a:int!1 || a:int!2 || (a:int?x.Discard() ++ b:bool?y.Discard()) \\ ()"
+      [ 
+        [([one], "b:bool!false || b:bool!true || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!false || b:bool!true || a:int!1 || Discard()", 1.0)];
+        [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!false || a:int!1 || a:int!2 || Discard()", 1.0)]
+      ];
+    
+    (* 27- if-then-else *)
+    assertResult "(b:bool!false) || Tau.(if 1=1 then b:bool?y.b2:bool!y else a:int?x.a2:int!x) \\ ()"
+      [ 
+        [([one], "b2:bool!false", 1.0)]
+      ];
+
   ]
 
   let _ =
