@@ -196,13 +196,14 @@ let find_valid_matches predicate mapper otherchoices =
 let find_valid_send_lis recv_cname vname after_recv symtbl otherchoices =
   let send_finder = (fun otherchoice ->
     match otherchoice.node with
-    | ExternalChoice({ node = Send(Chan(send_cname, _), _); _ }::[]) when send_cname = recv_cname -> true
+    | ExternalChoice({ node = Send(Chan(send_cname, _), _); _ }::[]) -> send_cname = recv_cname
     | _ -> false
   ) in
   (* find all the valid send *)
   find_valid_matches send_finder (fun (send_found, others) ->
     (match send_found.node with
     | ExternalChoice({ node = Send(_, expr); _ }::[]) ->
+      Printf.printf "SEND FOUND\n";
       let send_value = eval_expr symtbl expr in
       (* add the value received to the symbol table *)
       let new_symtbl = begin_block symtbl in
@@ -214,15 +215,16 @@ let find_valid_send_lis recv_cname vname after_recv symtbl otherchoices =
   ) otherchoices
 
 let find_valid_recv_lis send_cname sendexpr symtbl otherchoices =
-  let recv_finder = (fun otherseq ->
-    (match otherseq.node with
-    | ExternalChoice({ node = Recv(Chan(recv_cname, _), _, _); _ }::[]) when recv_cname = send_cname -> true
+  let recv_finder = (fun otherchoice ->
+    (match otherchoice.node with
+    | ExternalChoice({ node = Recv(Chan(recv_cname, _), _, _); _ }::[]) -> recv_cname = send_cname
     | _ -> false)
   ) in
   (* find all the valid send *)
   find_valid_matches recv_finder (fun (recv_found, others) ->
     (match recv_found.node with
     | ExternalChoice({ node = Recv(_, vname, after_recv); _ }::[]) ->
+      Printf.printf "RECV FOUND: chan %s\n" send_cname;
       let send_value = eval_expr symtbl sendexpr in
       (* add the value received to the symbol table *)
       let new_symtbl = begin_block symtbl in
@@ -246,10 +248,14 @@ let choices_to_processes res before_lis external_choice_list proc =
       (* if the current seq is a recv, find a valid send *)
       | Recv(Chan(recv_cname, _), vname, after_recv) -> 
           let matches = find_valid_send_lis recv_cname vname after_recv symtbl restofchoices in
-          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
+          let tmp = List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
             let extbefore = List.append before_lis choiceslis in
             (extbefore, new_symtbl)::thisacc
-          ) new_choices_acc matches
+          ) new_choices_acc matches in
+
+          Printf.printf "END ---\n";
+
+          tmp
           (* let ((new_choice_lis, recv_symtbl), found) = List.fold_left (fun ((acc2, _), found) choice ->
             match choice.node with
             | ExternalChoice(otherseqlis) ->
@@ -279,10 +285,14 @@ let choices_to_processes res before_lis external_choice_list proc =
       (* if the current seq is a send, find a valid recv *)
       | Send(Chan(send_cname, _), sendexpr) -> 
           let matches = find_valid_recv_lis send_cname sendexpr symtbl restofchoices in
-          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
+          let tmp = List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
             let extbefore = List.append before_lis choiceslis in
             (extbefore, new_symtbl)::thisacc
-          ) new_choices_acc matches
+          ) new_choices_acc matches in
+
+          Printf.printf "END ---\n";
+
+          tmp
         (* let (new_choice_lis, found, send_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
           if found then (choice::acc2, found, acc_symtbl) else
           match choice.node with
@@ -441,7 +451,16 @@ let preprocess distrlis =
                   ) in
                   let new_lis = (match opt with
                   | Some (el) -> el::rest
-                  | None -> external_choice_list) 
+                  | None -> 
+                    let send_finder = (fun otherchoice ->
+                      match otherchoice.node with
+                      | ExternalChoice({ node = Send(Chan(_, _), _); _ }::[]) -> true
+                      | _ -> false
+                    ) in
+                    let opt2, rest2 = extract_element_opt external_choice_list send_finder in
+                    (match opt2, rest2 with
+                    | Some (el2), _ -> el2::rest2
+                    | None, _ -> external_choice_list)) 
                   in
                   choices_to_processes [] [] new_lis proc)
             proclist
