@@ -453,15 +453,7 @@ let preprocess distrlis =
       [] distrlis 
 
 let rec eval_program distributions =
-  debug_distributions "BEFORE PREPROCESSING" distributions;
-
-  let after_preprocessing = preprocess distributions in
-  let after_preprocessing = List.rev after_preprocessing in
-  
-  let after_preprocessing = if after_preprocessing = [] 
-  then distributions else after_preprocessing in
-
-  debug_distributions "APPLIED PREPROCESSING" after_preprocessing;
+  debug_distributions "AFTER PREPROCESSING" distributions;
 
   let after_one_step =
     List.fold_left
@@ -477,7 +469,7 @@ let rec eval_program distributions =
         let new_proc_lis = List.rev new_proc_lis in
         if new_proc_lis = [] then accdistr
         else RunDistr new_proc_lis :: accdistr)
-      [] after_preprocessing
+      [] distributions
   in
   let after_one_step = List.rev after_one_step in
 
@@ -545,8 +537,13 @@ let eval (prog : program) (qmax : int) =
   let starting_distr =
     RunDistr [ Process (symtbl, Conf (qst, prog, 1.0)) ]
   in
+  let after_preprocessing = preprocess [ starting_distr ] in
+  let after_preprocessing = List.rev after_preprocessing in
+  
+  let after_preprocessing = if after_preprocessing = [] 
+  then [ starting_distr ] else after_preprocessing in
   (* evaluate the starting process with the starting configuration *)
-  let ending_distr = eval_program [ starting_distr ] in
+  let ending_distr = eval_program after_preprocessing in
   List.map
     (fun (RunDistr proclist) ->
       Distribution
