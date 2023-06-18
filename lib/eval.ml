@@ -181,7 +181,63 @@ let rec extract_element_opt lis predicate =
       let opt, rec_tail = extract_element_opt tail predicate in
       (opt, hd :: rec_tail)
 
-let rec choices_to_processes res before_lis external_choice_list proc = 
+let rec extract_all_elements predicate lst =
+  match lst with
+  | [] -> []
+  | hd :: tl ->
+      if predicate hd then
+        (hd, tl) :: List.map (fun (x, xs) -> (x, hd :: xs)) (extract_all_elements predicate tl)
+      else
+        List.map (fun (x, xs) -> (x, hd :: xs)) (extract_all_elements predicate tl)
+
+let find_valid_matches predicate mapper otherchoices =
+  (* find all the valid matches *)
+  let matches = extract_all_elements predicate otherchoices in
+  (* if a match is found, perform matching by computing the value to be received *)
+  List.map mapper matches
+
+let find_valid_send_lis recv_cname vname after_recv symtbl otherchoices =
+  let send_finder = (fun otherchoice ->
+    match otherchoice.node with
+    | ExternalChoice({ node = Send(Chan(send_cname, _), _); _ }::[]) when send_cname = recv_cname -> true
+    | _ -> false
+  ) in
+  (* find all the valid send *)
+  find_valid_matches send_finder (fun (send_found, others) ->
+    (match send_found.node with
+    | ExternalChoice({ node = Send(_, expr); _ }::[]) ->
+      let send_value = eval_expr symtbl expr in
+      (* add the value received to the symbol table *)
+      let new_symtbl = begin_block symtbl in
+      add_entry vname send_value new_symtbl |> ignore;
+      let { node = ExternalPar(choicelis); _ } = internal_par_to_external new_symtbl after_recv in
+      (* valid send found, do not keep this choice because data was sent *)
+      (List.append choicelis others), new_symtbl
+    | _ -> send_found::others, symtbl)
+  ) otherchoices
+
+let find_valid_recv_lis send_cname sendexpr symtbl otherchoices =
+  let recv_finder = (fun otherseq ->
+    (match otherseq.node with
+    | ExternalChoice({ node = Recv(Chan(recv_cname, _), _, _); _ }::[]) when recv_cname = send_cname -> true
+    | _ -> false)
+  ) in
+  (* find all the valid send *)
+  find_valid_matches recv_finder (fun (recv_found, others) ->
+    (match recv_found.node with
+    | ExternalChoice({ node = Recv(_, vname, after_recv); _ }::[]) ->
+      let send_value = eval_expr symtbl sendexpr in
+      (* add the value received to the symbol table *)
+      let new_symtbl = begin_block symtbl in
+      add_entry vname send_value new_symtbl |> ignore;
+      let { node = ExternalPar(choicelis); _ } = internal_par_to_external new_symtbl after_recv in
+      (* valid send found, do not keep this choice because data was sent *)
+      (List.append choicelis others), new_symtbl
+    | _ -> (* valid recv not found, keep this choice *)
+      recv_found::others, symtbl)
+  ) otherchoices
+
+let choices_to_processes res before_lis external_choice_list proc = 
   let (Process
   (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
   match external_choice_list with
@@ -192,8 +248,12 @@ let rec choices_to_processes res before_lis external_choice_list proc =
       (match seq.node with
       (* if the current seq is a recv, find a valid send *)
       | Recv(Chan(recv_cname, _), vname, after_recv) -> 
-          let (new_choice_lis, found, recv_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
-            if found then (choice::acc2, found, acc_symtbl) else
+          let matches = find_valid_send_lis recv_cname vname after_recv symtbl restofchoices in
+          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
+            let extbefore = List.append before_lis choiceslis in
+            (extbefore, new_symtbl)::thisacc
+          ) new_choices_acc matches
+          (* let ((new_choice_lis, recv_symtbl), found) = List.fold_left (fun ((acc2, _), found) choice ->
             match choice.node with
             | ExternalChoice(otherseqlis) ->
               (* find a valid send *)
@@ -211,17 +271,22 @@ let rec choices_to_processes res before_lis external_choice_list proc =
                 add_entry vname send_value new_symtbl |> ignore;
                 let { node = ExternalPar(choicelis); _ } = internal_par_to_external new_symtbl after_recv in
                 (* valid send found, do not keep this choice because data was sent *)
-                (List.append choicelis acc2, true, new_symtbl)
+                ((List.append choicelis acc2, new_symtbl), true)
               | _ -> (* valid send not found, keep this choice *)
-                (choice::acc2, found, symtbl))
-          ) ([], false, symtbl) restofchoices
+                ((choice::acc2, symtbl), found))
+          ) (([], symtbl), false) restofchoices
         in
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
-        (extbefore, recv_symtbl)::new_choices_acc
+        (extbefore, recv_symtbl)::new_choices_acc *)
       (* if the current seq is a send, find a valid recv *)
       | Send(Chan(send_cname, _), sendexpr) -> 
-        let (new_choice_lis, found, send_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
+          let matches = find_valid_recv_lis send_cname sendexpr symtbl restofchoices in
+          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
+            let extbefore = List.append before_lis choiceslis in
+            (extbefore, new_symtbl)::thisacc
+          ) new_choices_acc matches
+        (* let (new_choice_lis, found, send_symtbl) = List.fold_left (fun (acc2, found, acc_symtbl) choice ->
           if found then (choice::acc2, found, acc_symtbl) else
           match choice.node with
           | ExternalChoice(otherseqlis) ->
@@ -247,7 +312,7 @@ let rec choices_to_processes res before_lis external_choice_list proc =
         in
         if not found then new_choices_acc else
         let extbefore = List.append before_lis new_choice_lis in
-        (extbefore, send_symtbl)::new_choices_acc
+        (extbefore, send_symtbl)::new_choices_acc *)
       | Discard _ -> new_choices_acc (* ignore discards *)
       | _ -> (* pick this element and create a new branch *)
         (match seqlis with
@@ -264,8 +329,9 @@ let rec choices_to_processes res before_lis external_choice_list proc =
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
           new_choices_list in
     let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
-    if List.length seqlis > 1 then new_res else
-    choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc
+    new_res
+    (* if List.length seqlis > 1 then new_res else
+    choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc *)
 
 let debug_distributions title distributions =
   if not debug then ()
