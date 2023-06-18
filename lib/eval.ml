@@ -13,8 +13,7 @@ type conf = Conf of qstate * Ast.program * float
 type distr = Distribution of conf list
 
 type value = Int of int | Bool of bool | QBit of int
-type memory = Memory of value Symbol_table.t * (value * bool) Symbol_table.t
-type process = Process of memory * conf
+type process = Process of value Symbol_table.t * conf
 type running_distr = RunDistr of process list
 
 let pretty_string_of_float number =
@@ -90,7 +89,7 @@ let rec eval_expr symtbl expr =
       | Access acc -> eval_access symtbl acc)
 
 let eval_seq seq proc =
-  let (Process (Memory (symtbl, channels), Conf (qst, prg, prob))) = proc in
+  let (Process (symtbl, Conf (qst, prg, prob))) = proc in
   match seq with
   | { node = nod; _ } -> (
       match nod with
@@ -107,13 +106,11 @@ let eval_seq seq proc =
             else
               (* build a new scope in the symbol table *)
               let new_symtbl = begin_block symtbl in
-              (* build a new scope in the channels symbol table *)
-              let new_channels = begin_block channels in
               (* put the given result in the new symbol table *)
               add_entry (VarName vname) (Int res) new_symtbl |> ignore;
               (* return the new quantum state, the rest of the program,
                   the new probability and the new symbol table *)
-              (Process(Memory(new_symtbl, new_channels), Conf(new_qst, prg, prob *. m_prob)), Some rest)::acc
+              (Process(new_symtbl, Conf(new_qst, prg, prob *. m_prob)), Some rest)::acc
           ) [] res_list
       | QOp (op, acclist, rest) ->
           (* get the list of qbits *)
@@ -130,7 +127,7 @@ let eval_seq seq proc =
                 let sndqbit = List.hd (List.tl q_indexes) in
                 qop_cx qst firstqbit sndqbit
           in
-          [(Process(Memory(symtbl, channels), Conf(new_qst, prg, prob)), Some rest)]
+          [(Process(symtbl, Conf(new_qst, prg, prob)), Some rest)]
       | _ ->
         [(proc, None)])
 
@@ -149,7 +146,7 @@ let prog_of_par ext_choices restr loc =
   Prog ({ node = ExternalPar ext_choices; loc }, restr)
 
 (* get the external par of the given process *)
-let extpar_of_proc (Process (Memory (_, _), Conf (_, Prog (ext_par, _), _))) =
+let extpar_of_proc (Process (_, Conf (_, Prog (ext_par, _), _))) =
   ext_par
 
 let internal_par_to_external symtbl intpar =
@@ -239,7 +236,7 @@ let find_valid_recv_lis send_cname sendexpr symtbl otherchoices =
 
 let choices_to_processes res before_lis external_choice_list proc = 
   let (Process
-  (Memory (symtbl, channels), Conf (qst, Prog (extpar, restr), prob))) = proc in
+  (symtbl, Conf (qst, Prog (extpar, restr), prob))) = proc in
   match external_choice_list with
   | [] -> res
   | { node = ExternalChoice(seqlis); loc }::restofchoices -> 
@@ -325,7 +322,7 @@ let choices_to_processes res before_lis external_choice_list proc =
     let new_distr_lis = List.map
     (fun (ext_choices, this_symtbl) ->
       Process
-        ( Memory (this_symtbl, begin_block channels),
+        ( this_symtbl,
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
           new_choices_list in
     let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
@@ -381,7 +378,7 @@ let eval_process proc =
                 Process (mem, Conf (qst, Prog (new_ext_par, restr), prob))
                 :: acc
             | Some intpar ->
-                let (Process(Memory (symtbl, channels), Conf (new_qst, _, new_prob))) =
+                let (Process(symtbl, Conf (new_qst, _, new_prob))) =
                   parallel_proc
                 in
                 let new_ext_par = internal_par_to_external symtbl intpar in
@@ -396,7 +393,7 @@ let eval_process proc =
                 let new_prog = Prog (new_ext_par, restr) in
                 let new_proc =
                   Process
-                    ( Memory (symtbl, channels),
+                    ( symtbl,
                       Conf (new_qst, new_prog, new_prob) )
                 in
                 new_proc :: acc)
@@ -541,14 +538,12 @@ let enhance_conf symtbl (Conf(qst, Prog(ext_par, restr), prob)) =
 let eval (prog : program) (qmax : int) =
   (* build empty symbol table *)
   let symtbl = begin_block empty_table in
-  (* build empty channels symbol table *)
-  let channels = begin_block empty_table in
   (* build the quantum state *)
   let qst = List.init (pow 2 qmax) (fun _ -> Complex.zero) in
   let qst = Complex.one :: List.tl qst in
   (* build the starting distribution that is an external par *)
   let starting_distr =
-    RunDistr [ Process (Memory (symtbl, channels), Conf (qst, prog, 1.0)) ]
+    RunDistr [ Process (symtbl, Conf (qst, prog, 1.0)) ]
   in
   (* evaluate the starting process with the starting configuration *)
   let ending_distr = eval_program [ starting_distr ] in
@@ -556,6 +551,6 @@ let eval (prog : program) (qmax : int) =
     (fun (RunDistr proclist) ->
       Distribution
         (List.map
-           (fun (Process (Memory (symtbl, _), cnf)) -> enhance_conf symtbl cnf)
+           (fun (Process (symtbl, cnf)) -> enhance_conf symtbl cnf)
            proclist))
     ending_distr
