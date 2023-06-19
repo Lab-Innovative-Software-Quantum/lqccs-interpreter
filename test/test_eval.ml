@@ -203,10 +203,15 @@ let tests =
         [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)]
       ];
     
-    (* 27- if-then-else *)
-    assertResult "(b:bool!false) || Tau.(if 1=1 then b:bool?y.b2:bool!y else a:int?x.a2:int!x) \\ ()"
+    (* 27- multiple send/recv *)
+    assertResult "a:int!1 || a:int?x.b:int!x || a:int?y.c:int!y || a:int?z.d:int!z || a:int!2 \\ ()"
       [ 
-        [([one], "b2:bool!false", 1.0)]
+        [([one], "a:int?z.d:int!z || b:int!1 || c:int!2", 1.0)];
+        [([one], "a:int?y.c:int!y || b:int!1 || d:int!2", 1.0)];
+        [([one], "a:int?z.d:int!z || c:int!1 || b:int!2", 1.0)];
+        [([one], "a:int?x.b:int!x || c:int!1 || d:int!2", 1.0)];
+        [([one], "a:int?y.c:int!y || d:int!1 || b:int!2", 1.0)];
+        [([one], "a:int?x.b:int!x || d:int!1 || c:int!2", 1.0)];
       ];
 
   ]
