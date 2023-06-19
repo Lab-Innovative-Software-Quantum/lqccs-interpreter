@@ -197,10 +197,10 @@ let tests =
     (* 26- parallelism with a single nondeterminism*)  
     assertResult "b:bool!false || b:bool!true || a:int!1 || a:int!2 || (a:int?x.Discard() ++ b:bool?y.Discard()) \\ ()"
       [ 
-        [([one], "b:bool!false || b:bool!true || a:int!2 || Discard()", 1.0)];
         [([one], "b:bool!false || b:bool!true || a:int!1 || Discard()", 1.0)];
-        [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)];
-        [([one], "b:bool!false || a:int!1 || a:int!2 || Discard()", 1.0)]
+        [([one], "b:bool!false || b:bool!true || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!false || a:int!1 || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)]
       ];
     
     (* 27- if-then-else *)
