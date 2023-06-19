@@ -180,14 +180,14 @@ let tests =
     (* 23- error from professors feedback *)
     assertResult "(a:int!1 ++ a:int!2) || a:int?x.b:int!x \\ ()"
       [
-        [([one], "b:int!1", 1.0)];
-        [([one], "b:int!2", 1.0)]
+        [([one], "b:int!2", 1.0)];
+        [([one], "b:int!1", 1.0)]
       ];
     (* 24- error from professors feedback *)
     assertResult "a:int!1 || a:int?x.b:int!x ++ a:int?y.c:int!y \\ ()"
       [
-        [([one], "b:int!1", 1.0)];
-        [([one], "c:int!1", 1.0)]
+        [([one], "c:int!1", 1.0)];
+        [([one], "b:int!1", 1.0)]
       ];
     (* 25- deadlock in nondeterministic choice *)
     assertResult "a:int!1 || (a:int?x.Discard() ++ b:bool?y.Discard()) || (b:bool?b1.Discard() ++ b:bool?b2.Discard())  \\ ()"
@@ -197,21 +197,21 @@ let tests =
     (* 26- parallelism with a single nondeterminism*)  
     assertResult "b:bool!false || b:bool!true || a:int!1 || a:int!2 || (a:int?x.Discard() ++ b:bool?y.Discard()) \\ ()"
       [ 
-        [([one], "b:bool!false || b:bool!true || a:int!1 || Discard()", 1.0)];
-        [([one], "b:bool!false || b:bool!true || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)];
         [([one], "b:bool!false || a:int!1 || a:int!2 || Discard()", 1.0)];
-        [([one], "b:bool!true || a:int!1 || a:int!2 || Discard()", 1.0)]
+        [([one], "b:bool!false || b:bool!true || a:int!2 || Discard()", 1.0)];
+        [([one], "b:bool!false || b:bool!true || a:int!1 || Discard()", 1.0)];
       ];
     
     (* 27- multiple send/recv *)
     assertResult "a:int!1 || a:int?x.b:int!x || a:int?y.c:int!y || a:int?z.d:int!z || a:int!2 \\ ()"
       [ 
-        [([one], "a:int?z.d:int!z || b:int!1 || c:int!2", 1.0)];
-        [([one], "a:int?y.c:int!y || b:int!1 || d:int!2", 1.0)];
-        [([one], "a:int?z.d:int!z || c:int!1 || b:int!2", 1.0)];
-        [([one], "a:int?x.b:int!x || c:int!1 || d:int!2", 1.0)];
-        [([one], "a:int?y.c:int!y || d:int!1 || b:int!2", 1.0)];
         [([one], "a:int?x.b:int!x || d:int!1 || c:int!2", 1.0)];
+        [([one], "a:int?y.c:int!y || d:int!1 || b:int!2", 1.0)];
+        [([one], "a:int?x.b:int!x || c:int!1 || d:int!2", 1.0)];
+        [([one], "a:int?z.d:int!z || c:int!1 || b:int!2", 1.0)];
+        [([one], "a:int?y.c:int!y || b:int!1 || d:int!2", 1.0)];
+        [([one], "a:int?z.d:int!z || b:int!1 || c:int!2", 1.0)];
       ];
 
   ]

@@ -257,11 +257,11 @@ let find_valid_recv_lis send_cname sendexpr symtbl otherchoices =
       ) acc recv_lis)
   ) otherchoices
 
-let choices_to_processes res before_lis external_choice_list proc = 
+let choices_to_processes external_choice_list proc = 
   let (Process
   (symtbl, Conf (qst, Prog (extpar, restr), prob))) = proc in
   match external_choice_list with
-  | [] -> res
+  | [] -> []
   | { node = ExternalChoice(seqlis); loc }::restofchoices -> 
     (* for each seq into seqlis *)
     let new_choices_list = List.fold_left (fun new_choices_acc seq ->
@@ -269,34 +269,25 @@ let choices_to_processes res before_lis external_choice_list proc =
       (* if the current seq is a recv, find a valid send *)
       | Recv(Chan(recv_cname, _), vname, after_recv) -> 
           let matches = find_valid_send_lis recv_cname vname after_recv symtbl restofchoices in
-          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
-            let extbefore = List.append before_lis choiceslis in
-            (extbefore, new_symtbl)::thisacc
-          ) new_choices_acc matches
+          List.append new_choices_acc matches
       (* if the current seq is a send, find a valid recv *)
       | Send(Chan(send_cname, _), sendexpr) -> 
           let matches = find_valid_recv_lis send_cname sendexpr symtbl restofchoices in
-          List.fold_left (fun thisacc (choiceslis, new_symtbl) -> 
-            let extbefore = List.append before_lis choiceslis in
-            (extbefore, new_symtbl)::thisacc
-          ) new_choices_acc matches
+          List.append new_choices_acc matches
       | Discard _ -> new_choices_acc (* ignore discards *)
       | _ -> (* pick this element and create a new branch *)
         (match seqlis with
         | [] | _::[] -> new_choices_acc
         | _ ->
-          let extbefore = List.append before_lis [{ node = ExternalChoice([seq]); loc }] in
-          ((List.append extbefore restofchoices), symtbl)::new_choices_acc))
+          (({ node = ExternalChoice([seq]); loc }::restofchoices), symtbl)::new_choices_acc))
     ) [] seqlis in
     (* transforms inner list from new_choices_list into processes *)
-    let new_distr_lis = List.map
+    List.map
     (fun (ext_choices, this_symtbl) ->
       Process
         ( this_symtbl,
           Conf (qst, prog_of_par ext_choices restr extpar.loc, prob) ))
-          new_choices_list in
-    let new_res = if new_distr_lis = res then res else (List.append new_distr_lis res) in
-    new_res
+          new_choices_list
     (* if List.length seqlis > 1 then new_res else
     choices_to_processes new_res ((List.hd external_choice_list)::before_lis) restofchoices proc *)
 
@@ -422,7 +413,7 @@ let preprocess distrlis =
                     | Some (el2), _ -> el2::rest2
                     | None, _ -> external_choice_list)) 
                   in
-                  choices_to_processes [] [] new_lis proc)
+                  choices_to_processes new_lis proc)
             proclist
         in
 
