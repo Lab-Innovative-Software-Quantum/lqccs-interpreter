@@ -116,8 +116,8 @@ let apply_measurement (q_state_vec : Mat.mat) (ops : (int * int) list) =
     | [] -> raise (QuantumException "Nothing to measure")
     | (_, op_id)::rest -> let initial_mat = select_measurement_mat op_id in 
       let complete_mat = create_matrix (List.map snd rest) initial_mat in
-      let meas_mat = Mat.dot (Mat.transpose complete_mat) complete_mat in
-      let prob = Mat.get (Mat.dot (Mat.dot (Mat.transpose q_state_vec) meas_mat) q_state_vec) 0 0 in
+      let meas_mat = Mat.dot (Mat.ctranspose complete_mat) complete_mat in
+      let prob = Mat.get (Mat.dot (Mat.dot (Mat.ctranspose q_state_vec) meas_mat) q_state_vec) 0 0 in
       let new_state = if prob == {re = 0.0; im = 0.0} then 
           Mat.zeros (Mat.col_num q_state_vec) 1
         else
