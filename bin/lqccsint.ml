@@ -63,7 +63,7 @@ let () =
     try
       if !sourcefile = "" then
         let _ =
-          Printf.printf "\nREPL interpreter. To exit send \"quit\".\n";
+          Printf.printf "\nlqCCS REPL environment. To exit send \"quit\".\n";
           Stdlib.flush_all ()
         in
         repl source
