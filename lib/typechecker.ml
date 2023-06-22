@@ -67,7 +67,7 @@ let rec typecheck_expr chantbl env expr =
                  (opname ^ " " ^ show_typ typ1 ^ " and " ^ show_typ typ2, loc))
           in
           (* ensure all the operations are between the same types *)
-          if typ1 <> typ2 then fail_fun "Invalid binary op between " typ1 typ2
+          if typ1 <> typ2 then fail_fun "Invalid binary op between" typ1 typ2
           else
             let binoptyp =
               match binop with

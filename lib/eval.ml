@@ -27,11 +27,11 @@ let string_of_qstate qst =
   string_of_list string_of_complex ~start_char:"[" ~end_char:"]" qst
 
 let string_of_conf (Conf (qst, prg, prob)) =
-  Printf.sprintf "(%s, %s, %s)" (string_of_qstate qst) (string_of_program prg)
+  Printf.sprintf "  (%s, %s, %s)" (string_of_qstate qst) (string_of_program prg)
     (pretty_string_of_float prob)
 
 let string_of_distribution (Distribution confs) =
-  string_of_list string_of_conf confs ~start_char:"[" ~end_char:"]"
+  string_of_list string_of_conf confs ~separator:",\n" ~start_char:"[\n" ~end_char:"\n]"
 
 let eval_binop (bop : binop) (v1 : value) (v2 : value) (loc : Location.code_pos)
     : value =
